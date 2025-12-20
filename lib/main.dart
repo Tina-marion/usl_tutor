@@ -5,6 +5,7 @@ import 'constants/app_theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/learning_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/stubs.dart';
 

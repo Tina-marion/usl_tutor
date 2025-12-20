@@ -16,12 +16,25 @@ class LearningScreen extends StatefulWidget {
 
 class _LearningScreenState extends State<LearningScreen> {
   String _selectedCategory = 'All';
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
   List<Lesson> _lessons = [];
 
   @override
   void initState() {
     super.initState();
     _loadLessons();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _loadLessons() {
@@ -74,7 +87,7 @@ class _LearningScreenState extends State<LearningScreen> {
       actions: [
         IconButton(
           icon: const Icon(Icons.search),
-          onPressed: () {},
+          onPressed: _showSearchDialog,
         ),
       ],
     );
@@ -121,7 +134,7 @@ class _LearningScreenState extends State<LearningScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final filtered = _selectedCategory == 'All'
+    var filtered = _selectedCategory == 'All'
         ? _lessons
         : _lessons
             .where((l) =>
@@ -129,6 +142,14 @@ class _LearningScreenState extends State<LearningScreen> {
                 l.title == _selectedCategory ||
                 l.description.contains(_selectedCategory))
             .toList();
+
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered
+          .where((l) =>
+              l.title.toLowerCase().contains(_searchQuery) ||
+              l.description.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
@@ -144,6 +165,37 @@ class _LearningScreenState extends State<LearningScreen> {
         ).animate().fadeIn(duration: 400.ms, delay: (100 * index).ms).slideY(
             begin: 0.2, end: 0, duration: 400.ms, delay: (100 * index).ms);
       },
+    );
+  }
+
+  void _showSearchDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Search Lessons'),
+        content: TextField(
+          controller: _searchController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter lesson name...',
+            prefixIcon: Icon(Icons.search),
+          ),
+          onSubmitted: (_) => Navigator.pop(context),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _searchController.clear();
+              Navigator.pop(context);
+            },
+            child: const Text('Clear'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Search'),
+          ),
+        ],
+      ),
     );
   }
 }

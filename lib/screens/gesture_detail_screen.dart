@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
+import '../services/progress_service.dart';
 
 class GestureDetailScreen extends StatefulWidget {
   final GestureModel gesture;
@@ -14,51 +15,72 @@ class GestureDetailScreen extends StatefulWidget {
 }
 
 class _GestureDetailScreenState extends State<GestureDetailScreen> {
+  final _progressService = ProgressService();
   bool _isFavorite = false;
   bool _isPlaying = false;
 
-  void _toggleFavorite() {
+  @override
+  void initState() {
+    super.initState();
+    _loadFavoriteState();
+  }
+
+  Future<void> _loadFavoriteState() async {
+    await _progressService.init();
+    setState(() {
+      _isFavorite = _progressService.isFavorite(widget.gesture.id);
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    await _progressService.toggleFavorite(widget.gesture.id);
     setState(() {
       _isFavorite = !_isFavorite;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isFavorite ? 'Added to favorites' : 'Removed from favorites',
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isFavorite ? 'Added to favorites' : 'Removed from favorites',
+          ),
+          duration: const Duration(seconds: 2),
         ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      );
+    }
   }
 
-  void _markAsLearned() {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Great Job! 🎉'),
-        content: Text('You\'ve marked "${widget.gesture.name}" as learned!'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('Continue Learning'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Navigate to practice mode with this gesture.
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.primaryColor,
+  Future<void> _markAsLearned() async {
+    await _progressService.markGestureAsLearned(widget.gesture.id);
+
+    if (mounted) {
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Great Job! 🎉'),
+          content: Text('You\'ve marked "${widget.gesture.name}" as learned!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: const Text('Continue Learning'),
             ),
-            child: const Text('Practice Now'),
-          ),
-        ],
-      ),
-    );
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                // TODO: Navigate to practice mode with this gesture.
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.primaryColor,
+              ),
+              child: const Text('Practice Now'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   void _startPractice() {

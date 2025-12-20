@@ -18,15 +18,6 @@ class QuizScreen extends StatelessWidget {
   }
 }
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _StubScaffold(title: 'Profile');
-  }
-}
-
 class _StubScaffold extends StatelessWidget {
   final String title;
 
