@@ -1,18 +1,21 @@
-# Uganga Sign Language (Android)
+# USL Tutor
 
-Simple Flutter app to practice Uganga sign language with a built-in practice counter.
+AI-Powered Sign Language Tutor for learning Ugandan Sign Language.
+
+## Features
+- Interactive learning with lessons and gestures
+- Progress tracking
+- Video demonstrations (placeholder)
+- Practice mode (coming soon)
 
 ## Requirements
 - Flutter 3.38.5+ and Dart 3.10+
-- Android SDK / emulator or physical device
+- Android SDK / emulator or web browser
 
-## Run (Android)
+## Run
 1) Install dependencies: `flutter pub get`
-2) Start emulator or connect a device.
-3) Launch: `flutter run -d <device_id>` (omit `-d` if only one device is available).
+2) Launch on Edge: `flutter run -d edge`
+3) Or Android: `flutter run -d <device_id>`
 
 ## Testing
 - `flutter test`
-
-## Build APK (debug)
-- `flutter build apk`
