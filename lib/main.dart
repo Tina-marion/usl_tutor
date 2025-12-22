@@ -7,7 +7,8 @@ import 'screens/learning_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
-import 'screens/stubs.dart';
+import 'screens/practice_screen.dart';
+import 'screens/quiz_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

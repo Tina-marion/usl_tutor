@@ -19,3 +19,4 @@ AI-Powered Sign Language Tutor for learning Ugandan Sign Language.
 
 ## Testing
 - `flutter test`
+`

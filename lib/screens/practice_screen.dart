@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
+import '../services/inference_service.dart';
 import '../services/progress_service.dart';
 
 class PracticeScreen extends StatefulWidget {
@@ -20,9 +22,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _isRecording = false;
+  bool _isUploading = false;
   int _countdown = 3;
   Timer? _countdownTimer;
   String? _feedback;
+  String? _translation;
   final _progressService = ProgressService();
 
   @override
@@ -92,31 +96,59 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   void _startRecording() {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      setState(() {
+        _feedback = 'Camera not ready';
+      });
+      return;
+    }
+
     setState(() {
       _isRecording = true;
       _countdown = 0;
+      _translation = null;
     });
 
-    // Simulate practice session
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        _stopRecording();
-      }
-    });
+    _cameraController!
+        .startVideoRecording()
+        .catchError((e) => setState(() => _feedback = 'Record error: $e'));
   }
 
   Future<void> _stopRecording() async {
+    if (!_isRecording) return;
+
     setState(() {
       _isRecording = false;
-      _feedback = 'Great job! Keep practicing to improve.';
     });
 
-    // Update practice time
-    await _progressService.addPracticeTime(5);
+    try {
+      final file = await _cameraController!.stopVideoRecording();
+      final localFile = File(file.path);
 
-    // Show result dialog
-    if (mounted) {
-      _showResultDialog();
+      setState(() {
+        _isUploading = true;
+        _feedback = 'Uploading for translation...';
+      });
+
+      final translation = await InferenceService.translateVideo(localFile);
+      await _progressService.addPracticeTime(1);
+
+      setState(() {
+        _translation = translation;
+        _feedback = 'Translation: $translation';
+      });
+    } catch (e) {
+      setState(() {
+        _feedback = 'Processing error: $e';
+      });
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+
+      if (mounted) {
+        _showResultDialog();
+      }
     }
   }
 
@@ -128,8 +160,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('You practiced for 5 minutes'),
+            const Text('You practiced for 1 minute'),
             const SizedBox(height: 16),
+            if (_translation != null)
+              Text(
+                'Translation: $_translation',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             if (widget.gesture != null) ...[
               Text('Mark "${widget.gesture!.name}" as learned?'),
             ],
@@ -309,8 +346,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     children: [
                       if (!_isRecording && _countdown == 0)
                         ElevatedButton.icon(
-                          onPressed:
-                              _isCameraInitialized ? _startPractice : null,
+                          onPressed: _isCameraInitialized && !_isUploading
+                              ? _startPractice
+                              : null,
                           icon: const Icon(Icons.play_arrow),
                           label: const Text('Start Practice'),
                           style: ElevatedButton.styleFrom(
@@ -334,6 +372,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               horizontal: 32,
                               vertical: 16,
                             ),
+                          ),
+                        ),
+                      if (_isUploading)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 12),
+                          child: SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(strokeWidth: 3),
                           ),
                         ),
                     ],
