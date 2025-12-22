@@ -11,7 +11,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'A friendly greeting gesture',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/hello.mp4',
+      videoUrl: 'assets/videos/0001.mp4',
       instructions: [
         'Raise your dominant hand to ear level',
         'Keep palm open, fingers together',
@@ -31,7 +31,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Express gratitude',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/thank_you.mp4',
+      videoUrl: 'assets/videos/0013.mp4',
       instructions: [
         'Touch your chin with fingertips',
         'Move hand forward and down',
@@ -52,7 +52,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Make a polite request',
       difficulty: 'Medium',
-      videoUrl: 'assets/videos/please.mp4',
+      videoUrl: 'assets/videos/0016.mp4',
       instructions: [
         'Place hand flat on chest',
         'Move in circular motion',
@@ -69,11 +69,11 @@ class MockDataService {
     ),
     const GestureModel(
       id: 'g4',
-      name: 'Good Morning',
+      name: 'Good',
       category: 'Greetings',
-      description: 'Morning greeting',
+      description: 'Morning greeting - Good',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/good_morning.mp4',
+      videoUrl: 'assets/videos/0018.mp4',
       instructions: [
         'Sign "good" first',
         'Then sign "morning"',
@@ -93,7 +93,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Farewell gesture',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/goodbye.mp4',
+      videoUrl: 'assets/videos/0027.mp4',
       instructions: [
         'Raise hand with palm facing person',
         'Open and close fingers',

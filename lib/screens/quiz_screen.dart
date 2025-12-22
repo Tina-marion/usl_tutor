@@ -1,18 +1,81 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:video_player/video_player.dart' as vp;
 import '../models/quiz.dart';
 import '../services/quiz_service.dart';
 import '../constants/app_constants.dart';
 import 'quiz_results_screen.dart';
 
+class VideoPlayer extends StatefulWidget {
+  final String videoUrl;
+  final bool autoPlay;
+  final bool loop;
+
+  const VideoPlayer({
+    super.key,
+    required this.videoUrl,
+    this.autoPlay = false,
+    this.loop = false,
+  });
+
+  @override
+  State<VideoPlayer> createState() => _VideoPlayerState();
+}
+
+class _VideoPlayerState extends State<VideoPlayer> {
+  vp.VideoPlayerController? _controller;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      _controller = vp.VideoPlayerController.asset(widget.videoUrl);
+      await _controller!.initialize();
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+        if (widget.autoPlay) {
+          _controller!.play();
+        }
+        if (widget.loop) {
+          _controller!.setLooping(true);
+        }
+      }
+    } catch (e) {
+      print('Error initializing video: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized || _controller == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return AspectRatio(
+      aspectRatio: _controller!.value.aspectRatio,
+      child: vp.VideoPlayer(_controller!),
+    );
+  }
+}
+
 class QuizScreen extends StatefulWidget {
   final int numberOfQuestions;
 
-  const QuizScreen({
-    super.key,
-    this.numberOfQuestions = 10,
-  });
+  const QuizScreen({super.key, this.numberOfQuestions = 10});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -74,12 +137,14 @@ class _QuizScreenState extends State<QuizScreen> {
       _hasAnswered = true;
     });
 
-    _answers.add(QuizAnswer(
-      questionId: question.id,
-      selectedAnswerIndex: _selectedAnswerIndex,
-      isCorrect: isCorrect,
-      answeredAt: DateTime.now(),
-    ));
+    _answers.add(
+      QuizAnswer(
+        questionId: question.id,
+        selectedAnswerIndex: _selectedAnswerIndex,
+        isCorrect: isCorrect,
+        answeredAt: DateTime.now(),
+      ),
+    );
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
@@ -101,12 +166,14 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _skipQuestion() {
-    _answers.add(QuizAnswer(
-      questionId: _questions[_currentQuestionIndex].id,
-      selectedAnswerIndex: null,
-      isCorrect: false,
-      answeredAt: DateTime.now(),
-    ));
+    _answers.add(
+      QuizAnswer(
+        questionId: _questions[_currentQuestionIndex].id,
+        selectedAnswerIndex: null,
+        isCorrect: false,
+        answeredAt: DateTime.now(),
+      ),
+    );
 
     _nextQuestion();
   }
@@ -291,40 +358,20 @@ class _QuizScreenState extends State<QuizScreen> {
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
       ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.sign_language,
-              size: 80,
-              color: Colors.white.withOpacity(0.7),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Gesture Display',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: AppConstants.fontSizeLarge,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppConstants.primaryColor.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Video/GIF will display here',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
-                  fontSize: AppConstants.fontSizeSmall,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+        child: question.videoUrl.isNotEmpty
+            ? VideoPlayer(
+                videoUrl: question.videoUrl,
+                autoPlay: true,
+                loop: true,
+              )
+            : Center(
+                child: Text(
+                  'No video available',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
-            ),
-          ],
-        ),
       ),
     )
         .animate()
@@ -385,7 +432,9 @@ class _QuizScreenState extends State<QuizScreen> {
               padding: const EdgeInsets.all(AppConstants.paddingLarge),
               decoration: BoxDecoration(
                 color: backgroundColor ?? Colors.white,
-                borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                borderRadius: BorderRadius.circular(
+                  AppConstants.radiusMedium,
+                ),
                 border: Border.all(
                   color: borderColor ?? AppConstants.dividerColor,
                   width: 2,
