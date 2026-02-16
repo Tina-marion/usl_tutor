@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
@@ -17,12 +19,57 @@ class GestureDetailScreen extends StatefulWidget {
 class _GestureDetailScreenState extends State<GestureDetailScreen> {
   final _progressService = ProgressService();
   bool _isFavorite = false;
-  bool _isPlaying = false;
+  VideoPlayerController? _videoController;
+  ChewieController? _chewieController;
 
   @override
   void initState() {
     super.initState();
     _loadFavoriteState();
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      _videoController = VideoPlayerController.asset(widget.gesture.videoUrl);
+      await _videoController!.initialize();
+
+      _chewieController = ChewieController(
+        videoPlayerController: _videoController!,
+        autoPlay: false,
+        looping: true,
+        aspectRatio: _videoController!.value.aspectRatio,
+        autoInitialize: true,
+        errorBuilder: (context, errorMessage) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 48),
+                const SizedBox(height: 8),
+                Text(
+                  'Error loading video',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Error initializing video: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _chewieController?.dispose();
+    _videoController?.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFavoriteState() async {
@@ -139,114 +186,32 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
       width: double.infinity,
       height: 300,
       color: Colors.black,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            color: Colors.grey[900],
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.play_circle_outline,
-                    size: 80,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Video: ${widget.gesture.name}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: AppConstants.fontSizeLarge,
+      child: _chewieController != null &&
+              _videoController != null &&
+              _videoController!.value.isInitialized
+          ? Chewie(controller: _chewieController!)
+          : Container(
+              color: Colors.grey[900],
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(
+                      color: AppConstants.primaryColor,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Video player will be integrated here',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: AppConstants.fontSizeMedium,
+                    const SizedBox(height: 16),
+                    Text(
+                      'Loading video...',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: AppConstants.fontSizeMedium,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (!_isPlaying)
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _isPlaying = true;
-                });
-                // TODO: Start video playback.
-              },
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppConstants.primaryColor.withOpacity(0.9),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                  size: 40,
-                ),
-              ),
-            ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.7),
-                    Colors.transparent,
                   ],
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildControlButton(Icons.replay, 'Replay'),
-                  const SizedBox(width: 24),
-                  _buildControlButton(Icons.slow_motion_video, 'Slow Motion'),
-                ],
-              ),
             ),
-          ),
-        ],
-      ),
     ).animate().fadeIn(duration: 400.ms);
-  }
-
-  Widget _buildControlButton(IconData icon, String label) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: AppConstants.fontSizeSmall,
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildGestureInfo() {
