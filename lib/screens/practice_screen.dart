@@ -153,9 +153,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   void _showResultDialog() {
-    final bool hasTranslation = _translation != null && _translation!.isNotEmpty;
+    final bool hasTranslation =
+        _translation != null && _translation!.isNotEmpty;
     final String gestureExpected = widget.gesture?.name ?? 'sign';
-    
+
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -163,7 +164,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
           children: [
             Icon(
               hasTranslation ? Icons.check_circle : Icons.info,
-              color: hasTranslation ? AppConstants.successColor : AppConstants.accentColor,
+              color: hasTranslation
+                  ? AppConstants.successColor
+                  : AppConstants.accentColor,
             ),
             const SizedBox(width: 8),
             const Text('Practice Complete!'),
@@ -227,7 +230,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       )
                     : Row(
                         children: [
-                          Icon(Icons.info_outline, color: AppConstants.warningColor),
+                          Icon(Icons.info_outline,
+                              color: AppConstants.warningColor),
                           const SizedBox(width: 8),
                           const Expanded(
                             child: Text(
