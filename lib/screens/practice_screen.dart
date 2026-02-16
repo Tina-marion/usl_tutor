@@ -23,7 +23,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   bool _isCameraInitialized = false;
   bool _isRecording = false;
   bool _isUploading = false;
-  int _countdown = 3;
+  int _countdown = 0;
   Timer? _countdownTimer;
   String? _feedback;
   String? _translation;
@@ -216,10 +216,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
               children: [
                 // Camera preview
                 if (_isCameraInitialized && _cameraController != null)
-                  Center(
-                    child: AspectRatio(
-                      aspectRatio: _cameraController!.value.aspectRatio,
-                      child: CameraPreview(_cameraController!),
+                  SizedBox.expand(
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: _cameraController!.value.previewSize!.height,
+                        height: _cameraController!.value.previewSize!.width,
+                        child: CameraPreview(_cameraController!),
+                      ),
                     ),
                   )
                 else

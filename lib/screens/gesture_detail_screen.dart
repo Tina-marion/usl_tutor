@@ -6,6 +6,7 @@ import 'package:chewie/chewie.dart';
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
 import '../services/progress_service.dart';
+import 'practice_screen.dart';
 
 class GestureDetailScreen extends StatefulWidget {
   final GestureModel gesture;
@@ -131,11 +132,10 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
   }
 
   void _startPractice() {
-    // TODO: Navigate to practice mode.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Opening practice mode...'),
-        duration: Duration(seconds: 2),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PracticeScreen(gesture: widget.gesture),
       ),
     );
   }
