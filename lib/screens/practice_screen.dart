@@ -153,31 +153,110 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   void _showResultDialog() {
+    final bool hasTranslation = _translation != null && _translation!.isNotEmpty;
+    final String gestureExpected = widget.gesture?.name ?? 'sign';
+    
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Practice Complete! 🎉'),
+        title: Row(
+          children: [
+            Icon(
+              hasTranslation ? Icons.check_circle : Icons.info,
+              color: hasTranslation ? AppConstants.successColor : AppConstants.accentColor,
+            ),
+            const SizedBox(width: 8),
+            const Text('Practice Complete!'),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('You practiced for 1 minute'),
-            const SizedBox(height: 16),
-            if (_translation != null)
-              Text(
-                'Translation: $_translation',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
             if (widget.gesture != null) ...[
-              Text('Mark "${widget.gesture!.name}" as learned?'),
+              Text(
+                'Expected: $gestureExpected',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (hasTranslation) ...[
+              const Text(
+                'You signed:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppConstants.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _translation!,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: AppConstants.primaryColor,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (widget.gesture != null)
+                _translation!.toLowerCase() == gestureExpected.toLowerCase()
+                    ? Row(
+                        children: [
+                          Icon(Icons.star, color: AppConstants.successColor),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Perfect match! Great job!',
+                              style: TextStyle(
+                                color: AppConstants.successColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Icon(Icons.info_outline, color: AppConstants.warningColor),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Keep practicing to improve!',
+                              style: TextStyle(
+                                color: AppConstants.warningColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+            ] else ...[
+              const Text(
+                'Could not detect sign. Please try again with:',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              const Text('• Better lighting'),
+              const Text('• Clear hand movements'),
+              const Text('• Proper camera position'),
             ],
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Continue Practicing'),
+            child: const Text('Practice Again'),
           ),
-          if (widget.gesture != null)
+          if (widget.gesture != null && hasTranslation)
             ElevatedButton(
               onPressed: () async {
                 await _progressService.markGestureAsLearned(widget.gesture!.id);

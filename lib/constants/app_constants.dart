@@ -11,6 +11,7 @@ class AppConstants {
   static const Color primaryColor = Color(0xFF6C63FF);
   static const Color secondaryColor = Color(0xFFFF6584);
   static const Color accentColor = Color(0xFF4CAF50);
+  static const Color successColor = Color(0xFF4CAF50);
   static const Color warningColor = Color(0xFFFF9800);
   static const Color errorColor = Color(0xFFF44336);
 
@@ -88,6 +89,7 @@ class AppConstants {
     'Food',
     'Colors',
     'Actions',
+    'Common Phrases',
   ];
 
   // Difficulty Levels
