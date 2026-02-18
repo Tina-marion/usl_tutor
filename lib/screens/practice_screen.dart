@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
@@ -20,6 +21,7 @@ class PracticeScreen extends StatefulWidget {
 
 class _PracticeScreenState extends State<PracticeScreen> {
   CameraController? _cameraController;
+  VideoPlayerController? _videoController;
   bool _isCameraInitialized = false;
   bool _isRecording = false;
   bool _isUploading = false;
@@ -33,7 +35,29 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void initState() {
     super.initState();
     _initializeCamera();
+    _initializeVideo();
     _progressService.init();
+  }
+
+  Future<void> _initializeVideo() async {
+    if (widget.gesture != null && widget.gesture!.videoUrl.isNotEmpty) {
+      try {
+        _videoController = VideoPlayerController.asset(
+          widget.gesture!.videoUrl,
+        );
+        await _videoController!.initialize();
+        // Loop the video
+        await _videoController!.setLooping(true);
+        // Start playing
+        await _videoController!.play();
+        if (mounted) {
+          setState(() {});
+        }
+      } catch (e) {
+        // Video loading failed, continue without it
+        print('Video loading error: $e');
+      }
+    }
   }
 
   Future<void> _initializeCamera() async {
@@ -74,6 +98,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void dispose() {
     _countdownTimer?.cancel();
     _cameraController?.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -335,6 +360,35 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           fontSize: 100,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Reference video - small display in top-right
+                if (_videoController != null &&
+                    _videoController!.value.isInitialized)
+                  Positioned(
+                    top: 20,
+                    right: 20,
+                    child: Container(
+                      width: 120,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppConstants.primaryColor,
+                          width: 2,
+                        ),
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.radiusSmall),
+                        color: Colors.black,
+                      ),
+                      child: ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.radiusSmall),
+                        child: AspectRatio(
+                          aspectRatio: _videoController!.value.aspectRatio,
+                          child: VideoPlayer(_videoController!),
                         ),
                       ),
                     ),
