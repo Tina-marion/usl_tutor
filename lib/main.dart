@@ -5,6 +5,7 @@ import 'constants/app_theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/learning_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/profile_creation_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/practice_screen.dart';
@@ -40,6 +41,7 @@ class USLTutorApp extends StatelessWidget {
       home: const SplashScreen(),
       routes: {
         '/splash': (context) => const SplashScreen(),
+        '/profile-creation': (context) => const ProfileCreationScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/home': (context) => const HomeScreen(),
         '/learning': (context) => const LearningScreen(),

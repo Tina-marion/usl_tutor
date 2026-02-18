@@ -2,7 +2,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/app_constants.dart';
+import '../models/user.dart';
+import '../screens/edit_profile_screen.dart';
 import '../services/progress_service.dart';
+import '../services/user_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,20 +16,32 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _progressService = ProgressService();
+  final _userService = UserService();
   Map<String, dynamic> _stats = {};
+  late UserProfile _user;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadStats();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    await _userService.init();
+    await _progressService.init();
+
+    setState(() {
+      _user = _userService.getUserProfile();
+      _stats = _progressService.getStats();
+      _isLoading = false;
+    });
   }
 
   Future<void> _loadStats() async {
-    await _progressService.init();
     setState(() {
+      _user = _userService.getUserProfile();
       _stats = _progressService.getStats();
-      _isLoading = false;
     });
   }
 
@@ -93,15 +108,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: AppConstants.paddingMedium),
-          const Text(
-            'USL Learner',
-            style: TextStyle(
+          Text(
+            _user.name,
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: AppConstants.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
+          Text(
+            _user.email.isNotEmpty ? _user.email : 'No email set',
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppConstants.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppConstants.paddingMedium),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.paddingMedium,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: AppConstants.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Level ${_user.level}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppConstants.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: AppConstants.paddingSmall),
+                    Icon(
+                      Icons.star,
+                      size: 20,
+                      color: AppConstants.primaryColor.withOpacity(0.7),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: _user.progressToNextLevel,
+                    minHeight: 6,
+                    backgroundColor: AppConstants.dividerColor,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppConstants.accentColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_user.xp}/${_user.xpForNextLevel} XP',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppConstants.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppConstants.paddingMedium),
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppConstants.paddingMedium,
@@ -128,6 +205,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: AppConstants.paddingLarge),
+          // Edit Profile Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _editProfile,
+              icon: const Icon(Icons.edit),
+              label: const Text('Edit Profile'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.primaryColor,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ),
         ],
@@ -213,6 +307,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProgressChart() {
+    final values = _progressService.getWeeklyProgress();
+    
+    // Calculate max Y value dynamically
+    final maxValue = values.isNotEmpty 
+        ? values.reduce((a, b) => a > b ? a : b)
+        : 1;
+    final maxY = (maxValue + 1).toDouble();
+
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
@@ -243,7 +345,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: 10,
+                maxY: maxY,
                 barTouchData: BarTouchData(enabled: false),
                 titlesData: FlTitlesData(
                   show: true,
@@ -289,12 +391,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 2,
+                  horizontalInterval: maxY > 0 ? (maxY / 4).ceilToDouble() : 1,
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: List.generate(7, (index) {
-                  // Mock data - replace with real data
-                  final values = [5, 7, 3, 8, 6, 4, 9];
                   return BarChartGroupData(
                     x: index,
                     barRods: [
@@ -485,7 +585,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
                 if (confirmed == true && mounted) {
                   await _progressService.resetAllProgress();
-                  await _loadStats();
+                  await _userService.reset();
+                  await _loadProfileData();
                   if (mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -496,9 +597,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 }
               },
             ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: AppConstants.errorColor),
+              title: const Text('Logout',
+                  style: TextStyle(color: AppConstants.errorColor)),
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Logout?'),
+                    content: const Text(
+                        'You will need to create a new profile when you log back in.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppConstants.errorColor,
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true && mounted) {
+                  await _userService.reset();
+                  await _progressService.resetAllProgress();
+                  if (mounted) {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/splash',
+                      (route) => false,
+                    );
+                  }
+                }
+              },
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _editProfile() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(user: _user),
+      ),
+    );
+
+    if (result == true && mounted) {
+      await _loadProfileData();
+    }
   }
 }

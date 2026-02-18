@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../constants/app_constants.dart';
+import '../services/progress_service.dart';
+import '../services/user_service.dart';
 import '../widgets/activity_item.dart';
 import '../widgets/quick_action_card.dart';
 
@@ -14,12 +16,30 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final _userService = UserService();
+  final _progressService = ProgressService();
 
   // TODO: replace with real data sources
-  final String userName = 'User';
+  String userName = 'User';
   final int signsLearnedThisWeek = 15;
   final String dailyChallenge = 'Good Morning';
   final double dailyChallengeProgress = 0.8;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeServices();
+  }
+
+  Future<void> _initializeServices() async {
+    await _userService.init();
+    await _userService.initializeUser();
+    await _progressService.init();
+    
+    setState(() {
+      userName = _userService.getUserProfile().name;
+    });
+  }
 
   void _onBottomNavTap(int index) {
     setState(() => _selectedIndex = index);
@@ -36,6 +56,14 @@ class _HomeScreenState extends State<HomeScreen> {
       default:
         break;
     }
+  }
+
+  Future<void> _addTestActivities() async {
+    await _progressService.addTestActivities();
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Test activities added! Scroll down to see them.')),
+    );
   }
 
   @override
@@ -61,6 +89,11 @@ class _HomeScreenState extends State<HomeScreen> {
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.add_circle_outline),
+          tooltip: 'Add Test Activities',
+          onPressed: _addTestActivities,
+        ),
         IconButton(
           icon: CircleAvatar(
             backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
@@ -258,6 +291,38 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRecentActivitySection() {
+    final activities = _progressService.getActivities();
+    
+    if (activities.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Recent Activity',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: AppConstants.paddingMedium),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppConstants.paddingLarge),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+            ),
+            child: Text(
+              'No recent activities yet. Start learning to see your progress here!',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppConstants.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -274,32 +339,69 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
           ),
           child: Column(
-            children: const [
-              ActivityItem(
-                icon: Icons.check_circle,
-                iconColor: AppConstants.accentColor,
-                title: '"Hello" - Mastered',
-                time: '2h ago',
-              ),
-              Divider(height: 1),
-              ActivityItem(
-                icon: Icons.star,
-                iconColor: AppConstants.warningColor,
-                title: '"Thank You" - Perfect!',
-                time: '5h ago',
-              ),
-              Divider(height: 1),
-              ActivityItem(
-                icon: Icons.refresh,
-                iconColor: AppConstants.textSecondary,
-                title: '"Please" - Practice more',
-                time: '1d ago',
-              ),
-            ],
+            children: List.generate(
+              activities.length < 3 ? activities.length : 3,
+              (index) {
+                final activity = activities[index];
+                return Column(
+                  children: [
+                    _buildActivityItemFromData(activity),
+                    if (index < 2) const Divider(height: 1),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ],
-    ).animate().fadeIn(duration: 400.ms, delay: 400.ms);
+    );
+  }
+
+  Widget _buildActivityItemFromData(Map<String, dynamic> activity) {
+    final type = activity['type'] as String;
+    late IconData icon;
+    late Color iconColor;
+
+    switch (type) {
+      case 'mastered':
+        icon = Icons.check_circle;
+        iconColor = AppConstants.accentColor;
+        break;
+      case 'learned':
+        icon = Icons.lightbulb;
+        iconColor = AppConstants.primaryColor;
+        break;
+      case 'quiz':
+        icon = Icons.quiz;
+        iconColor = AppConstants.warningColor;
+        break;
+      case 'practiced':
+      default:
+        icon = Icons.refresh;
+        iconColor = AppConstants.textSecondary;
+    }
+
+    final timestamp = activity['timestamp'] as DateTime;
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    String timeAgo;
+    if (difference.inDays > 0) {
+      timeAgo = '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      timeAgo = '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      timeAgo = '${difference.inMinutes}m ago';
+    } else {
+      timeAgo = 'Just now';
+    }
+
+    return ActivityItem(
+      icon: icon,
+      iconColor: iconColor,
+      title: activity['title'] as String,
+      time: timeAgo,
+    );
   }
 
   Widget _buildBottomNavigationBar() {

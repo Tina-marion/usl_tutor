@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../constants/app_constants.dart';
+import '../services/user_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,6 +12,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final _userService = UserService();
+
   @override
   void initState() {
     super.initState();
@@ -18,9 +21,20 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateToNextScreen() async {
+    await _userService.init();
     await Future.delayed(const Duration(seconds: 3));
+
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/onboarding');
+
+    // Check if user has created a profile
+    final user = _userService.getUserProfile();
+    if (user.name == 'USL Learner') {
+      // Profile not customized, go to profile creation
+      Navigator.pushReplacementNamed(context, '/profile-creation');
+    } else {
+      // Profile already created, go to onboarding or home
+      Navigator.pushReplacementNamed(context, '/onboarding');
+    }
   }
 
   @override
