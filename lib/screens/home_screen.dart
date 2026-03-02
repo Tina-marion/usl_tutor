@@ -19,11 +19,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final _userService = UserService();
   final _progressService = ProgressService();
 
-  // TODO: replace with real data sources
-  String userName = 'User';
-  final int signsLearnedThisWeek = 15;
-  final String dailyChallenge = 'Good Morning';
-  final double dailyChallengeProgress = 0.8;
+  String userName = '';
+  int signsLearnedThisWeek = 0;
+  String dailyChallenge = '';
+  double dailyChallengeProgress = 0.0;
+
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -35,9 +36,41 @@ class _HomeScreenState extends State<HomeScreen> {
     await _userService.init();
     await _userService.initializeUser();
     await _progressService.init();
-    
+
+    // Fetch dynamic data
     setState(() {
       userName = _userService.getUserProfile().name;
+      // Compute signs learned this week from activities if ProgressService doesn't expose a direct method.
+      final activities = _progressService.getActivities();
+      signsLearnedThisWeek = activities.where((activity) {
+        final timestamp = activity['timestamp'] as DateTime;
+        final type = activity['type'] as String?;
+        final withinWeek = DateTime.now().difference(timestamp).inDays < 7;
+        return withinWeek && (type == 'learned' || type == 'mastered');
+      }).length;
+
+      // Derive daily challenge from activities (fall back to a sensible default)
+      String challengeTitle = AppConstants.dailyChallenge;
+      double challengeProgressVal = 0.0;
+      try {
+        final challengeActivity = activities.firstWhere((activity) {
+          final type = activity['type'] as String?;
+          return type == 'daily_challenge' || type == 'challenge';
+        });
+        challengeTitle = challengeActivity['title'] as String? ?? challengeTitle;
+        final progressVal = challengeActivity['progress'];
+        if (progressVal is num) {
+          challengeProgressVal = progressVal.toDouble();
+        } else if (progressVal is String) {
+          challengeProgressVal = double.tryParse(progressVal) ?? challengeProgressVal;
+        }
+      } catch (_) {
+        // No explicit daily challenge found in activities; keep defaults.
+      }
+
+      dailyChallenge = challengeTitle;
+      dailyChallengeProgress = challengeProgressVal;
+      _isLoading = false;
     });
   }
 
@@ -66,12 +99,46 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String get greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstants.backgroundColor,
       appBar: _buildAppBar(),
-      body: _buildBody(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () async {
+                // Re-initialize the progress service to refresh loaded activities
+                await _progressService.init();
+                setState(() {});
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppConstants.paddingMedium),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _WelcomeSection(userName: userName, signsLearned: signsLearnedThisWeek, greeting: greeting),
+                    const SizedBox(height: AppConstants.paddingLarge),
+                    _DailyChallengeCard(
+                      dailyChallenge: dailyChallenge,
+                      progress: dailyChallengeProgress,
+                    ),
+                    const SizedBox(height: AppConstants.paddingLarge),
+                    _QuickActionsSection(),
+                    const SizedBox(height: AppConstants.paddingLarge),
+                    _RecentActivitySection(progressService: _progressService),
+                  ],
+                ),
+              ),
+            ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -82,6 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.menu),
+        tooltip: 'Menu',
         onPressed: () {},
       ),
       title: const Text(
@@ -102,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppConstants.primaryColor,
             ),
           ),
+          tooltip: 'Profile',
           onPressed: () => Navigator.pushNamed(context, '/profile'),
         ),
         const SizedBox(width: 8),
@@ -109,37 +178,66 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBody() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppConstants.paddingMedium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildWelcomeSection(),
-          const SizedBox(height: AppConstants.paddingLarge),
-          _buildDailyChallengeCard(),
-          const SizedBox(height: AppConstants.paddingLarge),
-          _buildQuickActionsSection(),
-          const SizedBox(height: AppConstants.paddingLarge),
-          _buildRecentActivitySection(),
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onBottomNavTap,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppConstants.primaryColor,
+        unselectedItemColor: AppConstants.textSecondary,
+        selectedFontSize: AppConstants.fontSizeSmall,
+        unselectedFontSize: AppConstants.fontSizeSmall,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Learn'),
+          BottomNavigationBarItem(icon: Icon(Icons.videocam), label: 'Practice'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
         ],
       ),
     );
   }
+}
 
-  Widget _buildWelcomeSection() {
+// ===================== WIDGETS =====================
+
+class _WelcomeSection extends StatelessWidget {
+  final String userName;
+  final int signsLearned;
+  final String greeting;
+
+  const _WelcomeSection({
+    required this.userName,
+    required this.signsLearned,
+    required this.greeting,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '${AppConstants.welcomeMessage}, $userName! 👋',
+          '$greeting, $userName! 👋',
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
-        ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
+        )
+            .animate()
+            .fadeIn(duration: 400.ms)
+            .slideX(begin: -0.2, end: 0),
         const SizedBox(height: 8),
         Text(
-          "You've learned $signsLearnedThisWeek signs this week",
+          "You've learned $signsLearned signs this week",
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: AppConstants.textSecondary,
               ),
@@ -150,8 +248,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+}
 
-  Widget _buildDailyChallengeCard() {
+class _DailyChallengeCard extends StatelessWidget {
+  final String dailyChallenge;
+  final double progress;
+
+  const _DailyChallengeCard({required this.dailyChallenge, required this.progress});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
@@ -194,15 +300,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: dailyChallengeProgress,
+              value: progress,
               backgroundColor: Colors.white.withOpacity(0.3),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
               minHeight: 8,
-            ),
+            ).animate().fadeIn().slideX(),
           ),
           const SizedBox(height: 8),
           Text(
-            '${(dailyChallengeProgress * 100).toInt()}% complete',
+            '${(progress * 100).toInt()}% complete',
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: AppConstants.fontSizeSmall,
@@ -231,8 +337,13 @@ class _HomeScreenState extends State<HomeScreen> {
         .fadeIn(duration: 400.ms, delay: 200.ms)
         .slideY(begin: 0.2, end: 0);
   }
+}
 
-  Widget _buildQuickActionsSection() {
+class _QuickActionsSection extends StatelessWidget {
+  const _QuickActionsSection();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -289,10 +400,30 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
   }
+}
 
-  Widget _buildRecentActivitySection() {
-    final activities = _progressService.getActivities();
-    
+class _RecentActivitySection extends StatelessWidget {
+  final ProgressService progressService;
+  const _RecentActivitySection({required this.progressService});
+
+  static const Map<String, IconData> activityIcons = {
+    'mastered': Icons.check_circle,
+    'learned': Icons.lightbulb,
+    'quiz': Icons.quiz,
+    'practiced': Icons.refresh,
+  };
+
+  static const Map<String, Color> activityColors = {
+    'mastered': AppConstants.accentColor,
+    'learned': AppConstants.primaryColor,
+    'quiz': AppConstants.warningColor,
+    'practiced': AppConstants.textSecondary,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final activities = progressService.getActivities();
+
     if (activities.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,104 +464,36 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
         ),
         const SizedBox(height: AppConstants.paddingMedium),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-          ),
-          child: Column(
-            children: List.generate(
-              activities.length < 3 ? activities.length : 3,
-              (index) {
-                final activity = activities[index];
-                return Column(
-                  children: [
-                    _buildActivityItemFromData(activity),
-                    if (index < 2) const Divider(height: 1),
-                  ],
-                );
-              },
-            ),
-          ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: activities.length < 3 ? activities.length : 3,
+          itemBuilder: (context, index) {
+            final activity = activities[index];
+            return Column(
+              children: [
+                ActivityItem(
+                  icon: activityIcons[activity['type']] ?? Icons.help,
+                  iconColor: activityColors[activity['type']] ?? Colors.grey,
+                  title: activity['title'] as String,
+                  time: _formatTimeAgo(activity['timestamp'] as DateTime),
+                ).animate().fadeIn(duration: 300.ms, delay: (index * 100).ms),
+                if (index < activities.length - 1) const Divider(height: 1),
+              ],
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildActivityItemFromData(Map<String, dynamic> activity) {
-    final type = activity['type'] as String;
-    late IconData icon;
-    late Color iconColor;
-
-    switch (type) {
-      case 'mastered':
-        icon = Icons.check_circle;
-        iconColor = AppConstants.accentColor;
-        break;
-      case 'learned':
-        icon = Icons.lightbulb;
-        iconColor = AppConstants.primaryColor;
-        break;
-      case 'quiz':
-        icon = Icons.quiz;
-        iconColor = AppConstants.warningColor;
-        break;
-      case 'practiced':
-      default:
-        icon = Icons.refresh;
-        iconColor = AppConstants.textSecondary;
-    }
-
-    final timestamp = activity['timestamp'] as DateTime;
+  String _formatTimeAgo(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
-    String timeAgo;
-    if (difference.inDays > 0) {
-      timeAgo = '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      timeAgo = '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      timeAgo = '${difference.inMinutes}m ago';
-    } else {
-      timeAgo = 'Just now';
-    }
-
-    return ActivityItem(
-      icon: icon,
-      iconColor: iconColor,
-      title: activity['title'] as String,
-      time: timeAgo,
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onBottomNavTap,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppConstants.primaryColor,
-        unselectedItemColor: AppConstants.textSecondary,
-        selectedFontSize: AppConstants.fontSizeSmall,
-        unselectedFontSize: AppConstants.fontSizeSmall,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Learn'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.videocam), label: 'Practice'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
-        ],
-      ),
-    );
+    if (difference.inDays > 0) return '${difference.inDays}d ago';
+    if (difference.inHours > 0) return '${difference.inHours}h ago';
+    if (difference.inMinutes > 0) return '${difference.inMinutes}m ago';
+    return 'Just now';
   }
 }
