@@ -30,6 +30,11 @@ android {
         versionName = flutter.versionName
     }
 
+    androidResources {
+        noCompress += "tflite"
+        noCompress += "lite"
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
@@ -41,4 +46,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("org.tensorflow:tensorflow-lite:2.12.0")
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.12.0")
 }

@@ -173,7 +173,7 @@ class MockDataService {
       category: 'Numbers',
       description: 'Number 1',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/one.mp4',
+      videoUrl: 'assets/videos/1.mp4',
       instructions: [
         'Raise index finger',
         'Keep other fingers closed',
@@ -193,7 +193,7 @@ class MockDataService {
       category: 'Numbers',
       description: 'Number 2',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/two.mp4',
+      videoUrl: 'assets/videos/2.mp4',
       instructions: [
         'Raise index and middle finger',
         'Keep other fingers closed',

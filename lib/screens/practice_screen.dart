@@ -152,7 +152,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
       setState(() {
         _isUploading = true;
-        _feedback = 'Uploading for translation...';
+        _feedback = 'Processing locally...';
       });
 
       final translation = await InferenceService.translateVideo(localFile);
