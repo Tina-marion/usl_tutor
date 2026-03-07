@@ -383,7 +383,7 @@ class _QuizScreenState extends State<QuizScreen> {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color.fromARGB(255, 236, 224, 224),
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
       ),
       child: const Text(
