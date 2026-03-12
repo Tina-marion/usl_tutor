@@ -33,10 +33,28 @@ class _VideoPlayerState extends State<VideoPlayer> {
     _initializeVideo();
   }
 
+  @override
+  void didUpdateWidget(covariant VideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoUrl != widget.videoUrl) {
+      _initializeVideo();
+    }
+  }
+
   Future<void> _initializeVideo() async {
+    final previousController = _controller;
+
+    if (mounted) {
+      setState(() {
+        _isInitialized = false;
+      });
+    }
+
     try {
       _controller = vp.VideoPlayerController.asset(widget.videoUrl);
       await _controller!.initialize();
+      await previousController?.dispose();
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
@@ -49,6 +67,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
         }
       }
     } catch (e) {
+      await previousController?.dispose();
       print('Error initializing video: $e');
     }
   }
@@ -362,6 +381,7 @@ class _QuizScreenState extends State<QuizScreen> {
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         child: question.videoUrl.isNotEmpty
             ? VideoPlayer(
+                key: ValueKey(question.videoUrl),
                 videoUrl: question.videoUrl,
                 autoPlay: true,
                 loop: true,

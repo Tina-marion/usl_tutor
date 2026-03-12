@@ -439,7 +439,7 @@ class MockDataService {
 
   static List<Lesson> getLessons() => _lessons;
 
-  static List<GestureModel> getGestures() => _gestures;
+  static List<GestureModel> getGestures() => List<GestureModel>.from(_gestures);
 
   static List<GestureModel> getGesturesByCategory(String category) =>
       _gestures.where((g) => g.category == category).toList();

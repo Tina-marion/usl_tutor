@@ -16,22 +16,24 @@ class QuizService {
     // Get available gestures
     List<GestureModel> gestures = category != null
         ? MockDataService.getGesturesByCategory(category)
-        : MockDataService.getGestures();
+        : MockDataService.getGestures().toList();
 
     // Filter out locked gestures
     gestures = gestures.where((g) => !g.isLocked).toList();
 
-    if (gestures.isEmpty) {
+    final uniqueGestures = _deduplicateByName(gestures);
+
+    if (uniqueGestures.isEmpty) {
       return [];
     }
 
     // Shuffle and take requested number
-    gestures.shuffle(_random);
-    final selectedGestures = gestures.take(numberOfQuestions).toList();
+    uniqueGestures.shuffle(_random);
+    final selectedGestures = uniqueGestures.take(numberOfQuestions).toList();
 
     // Generate questions
     return selectedGestures.map((gesture) {
-      return _createQuestionFromGesture(gesture, gestures);
+      return _createQuestionFromGesture(gesture, uniqueGestures);
     }).toList();
   }
 
@@ -40,20 +42,28 @@ class QuizService {
     GestureModel targetGesture,
     List<GestureModel> allGestures,
   ) {
+    final targetName = _normalizeGestureName(targetGesture.name);
+
     // Get wrong answers
-    final wrongGestures =
-        allGestures.where((g) => g.id != targetGesture.id).toList();
-    wrongGestures.shuffle(_random);
+    final wrongGestures = allGestures
+        .where(
+          (g) =>
+              g.id != targetGesture.id &&
+              _normalizeGestureName(g.name) != targetName,
+        )
+        .toList();
+
+    final wrongOptions = wrongGestures.map((g) => g.name).toSet().toList();
+    wrongOptions.shuffle(_random);
 
     // Create options (3 wrong + 1 correct)
-    final wrongOptions = wrongGestures.take(3).map((g) => g.name).toList();
-
     // Combine and shuffle
-    final options = [targetGesture.name, ...wrongOptions];
+    final options = [targetGesture.name, ...wrongOptions.take(3)];
     options.shuffle(_random);
 
     // Find correct answer index
-    final correctIndex = options.indexOf(targetGesture.name);
+    final correctIndex = options
+        .indexWhere((option) => _normalizeGestureName(option) == targetName);
 
     return QuizQuestion(
       id: 'q_${targetGesture.id}_${DateTime.now().millisecondsSinceEpoch}',
@@ -65,6 +75,22 @@ class QuizService {
       category: targetGesture.category,
     );
   }
+
+  List<GestureModel> _deduplicateByName(List<GestureModel> gestures) {
+    final seenNames = <String>{};
+    final uniqueGestures = <GestureModel>[];
+
+    for (final gesture in gestures) {
+      final normalizedName = _normalizeGestureName(gesture.name);
+      if (seenNames.add(normalizedName)) {
+        uniqueGestures.add(gesture);
+      }
+    }
+
+    return uniqueGestures;
+  }
+
+  String _normalizeGestureName(String name) => name.trim().toLowerCase();
 
   /// Calculate quiz results
   QuizResult calculateResults({
