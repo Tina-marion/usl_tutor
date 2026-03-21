@@ -82,14 +82,14 @@ class AppConstants {
 
   // Categories
   static const List<String> categories = [
-    'All',
+    'Alphabets',
+    'Numbers',
     'Greetings',
     'Family',
-    'Numbers',
     'Food',
+    'Common Phrases',
     'Colors',
     'Actions',
-    'Common Phrases',
   ];
 
   // Difficulty Levels

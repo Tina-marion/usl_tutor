@@ -1,6 +1,6 @@
 - [x] Verify that the copilot-instructions.md file in the .github directory is created.
-- [x] Clarify Project Requirements (Android only; Uganga sign language app).
-- [x] Scaffold the Project (flutter create . --platforms=android --project-name uganga_sign_language).
+- [x] Clarify Project Requirements (Android only; uganda sign language app).
+- [x] Scaffold the Project (flutter create . --platforms=android --project-name uganda_sign_language).
 - [x] Customize the Project (re-themed home screen, practice counter copy).
 - [x] Install Required Extensions (none needed).
 - [x] Compile the Project (flutter test).

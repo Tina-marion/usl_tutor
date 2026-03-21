@@ -16,46 +16,62 @@ class LessonCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+      borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
       child: Container(
         padding: const EdgeInsets.all(AppConstants.paddingLarge),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+          borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              width: double.infinity,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppConstants.primaryColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                border: Border.all(color: AppConstants.dividerColor),
+              ),
+              child: lesson.imagePath != null
+                  ? ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(AppConstants.radiusMedium),
+                      child: Image.asset(
+                        lesson.imagePath!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Text(
+                              lesson.icon,
+                              style: const TextStyle(fontSize: 36),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        lesson.icon,
+                        style: const TextStyle(fontSize: 36),
+                      ),
+                    ),
+            ),
+            const SizedBox(height: AppConstants.paddingMedium),
             Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppConstants.primaryColor.withOpacity(0.1),
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusSmall),
-                  ),
-                  child: Center(
-                    child: Text(
-                      lesson.icon,
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppConstants.paddingMedium),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 2),
                       Text(
                         lesson.title,
                         style: const TextStyle(
