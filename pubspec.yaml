@@ -12,6 +12,8 @@ dependencies:
 
   flutter_onnxruntime: ^1.6.4
 
+  
+
   # UI & Icons
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0

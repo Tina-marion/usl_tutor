@@ -37,39 +37,31 @@ class _HomeScreenState extends State<HomeScreen> {
     await _userService.initializeUser();
     await _progressService.init();
 
-    // Fetch dynamic data
     setState(() {
       userName = _userService.getUserProfile().name;
-      // Compute signs learned this week from activities if ProgressService doesn't expose a direct method.
+
       final activities = _progressService.getActivities();
       signsLearnedThisWeek = activities.where((activity) {
         final timestamp = activity['timestamp'] as DateTime;
         final type = activity['type'] as String?;
-        final withinWeek = DateTime.now().difference(timestamp).inDays < 7;
-        return withinWeek && (type == 'learned' || type == 'mastered');
+        return DateTime.now().difference(timestamp).inDays < 7 &&
+            (type == 'learned' || type == 'mastered');
       }).length;
 
-      // Derive daily challenge from activities (fall back to a sensible default)
+      // Daily challenge logic (unchanged)
       String challengeTitle = AppConstants.dailyChallenge;
-      double challengeProgressVal = 0.0;
+      double progressVal = 0.0;
       try {
-        final challengeActivity = activities.firstWhere((activity) {
-          final type = activity['type'] as String?;
-          return type == 'daily_challenge' || type == 'challenge';
-        });
+        final challengeActivity = activities.firstWhere(
+          (a) => ['daily_challenge', 'challenge'].contains(a['type']),
+        );
         challengeTitle = challengeActivity['title'] as String? ?? challengeTitle;
-        final progressVal = challengeActivity['progress'];
-        if (progressVal is num) {
-          challengeProgressVal = progressVal.toDouble();
-        } else if (progressVal is String) {
-          challengeProgressVal = double.tryParse(progressVal) ?? challengeProgressVal;
-        }
-      } catch (_) {
-        // No explicit daily challenge found in activities; keep defaults.
-      }
+        final p = challengeActivity['progress'];
+        progressVal = (p is num) ? p.toDouble() : double.tryParse(p.toString()) ?? 0.0;
+      } catch (_) {}
 
       dailyChallenge = challengeTitle;
-      dailyChallengeProgress = challengeProgressVal;
+      dailyChallengeProgress = progressVal;
       _isLoading = false;
     });
   }
@@ -77,17 +69,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onBottomNavTap(int index) {
     setState(() => _selectedIndex = index);
     switch (index) {
-      case 1:
-        Navigator.pushNamed(context, '/learning');
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/practice');
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/profile');
-        break;
-      default:
-        break;
+      case 1: Navigator.pushNamed(context, '/learning'); break;
+      case 2: Navigator.pushNamed(context, '/practice'); break;
+      case 3: Navigator.pushNamed(context, '/profile'); break;
     }
   }
 
@@ -95,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await _progressService.addTestActivities();
     setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Test activities added! Scroll down to see them.')),
+      const SnackBar(content: Text('Test activities added!')),
     );
   }
 
@@ -115,7 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () async {
-                // Re-initialize the progress service to refresh loaded activities
                 await _progressService.init();
                 setState(() {});
               },
@@ -125,21 +108,32 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _WelcomeSection(userName: userName, signsLearned: signsLearnedThisWeek, greeting: greeting),
-                    const SizedBox(height: AppConstants.paddingLarge),
+                    _WelcomeSection(
+                      userName: userName,
+                      signsLearned: signsLearnedThisWeek,
+                      greeting: greeting,
+                    ),
+                    const SizedBox(height: 32),
                     _DailyChallengeCard(
                       dailyChallenge: dailyChallenge,
                       progress: dailyChallengeProgress,
                     ),
-                    const SizedBox(height: AppConstants.paddingLarge),
+                    const SizedBox(height: 32),
                     _QuickActionsSection(),
-                    const SizedBox(height: AppConstants.paddingLarge),
+                    const SizedBox(height: 32),
                     _RecentActivitySection(progressService: _progressService),
+                    const SizedBox(height: 80), // space for floating button
                   ],
                 ),
               ),
             ),
       bottomNavigationBar: _buildBottomNavigationBar(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, '/practice'),
+        icon: const Icon(Icons.videocam),
+        label: const Text('Start Practice'),
+        backgroundColor: AppConstants.primaryColor,
+      ),
     );
   }
 
@@ -147,68 +141,42 @@ class _HomeScreenState extends State<HomeScreen> {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        tooltip: 'Menu',
-        onPressed: () {},
-      ),
-      title: const Text(
-        AppConstants.appName,
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
+      leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
+      title: Text(AppConstants.appName, style: const TextStyle(fontWeight: FontWeight.bold)),
       actions: [
         IconButton(
           icon: const Icon(Icons.add_circle_outline),
-          tooltip: 'Add Test Activities',
           onPressed: _addTestActivities,
         ),
         IconButton(
           icon: CircleAvatar(
-            backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
-            child: Icon(
-              Icons.person,
-              color: AppConstants.primaryColor,
-            ),
+            backgroundColor: AppConstants.primaryColor.withOpacity(0.15),
+            child: Icon(Icons.person, color: AppConstants.primaryColor),
           ),
-          tooltip: 'Profile',
           onPressed: () => Navigator.pushNamed(context, '/profile'),
         ),
-        const SizedBox(width: 8),
       ],
     );
   }
 
   Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onBottomNavTap,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppConstants.primaryColor,
-        unselectedItemColor: AppConstants.textSecondary,
-        selectedFontSize: AppConstants.fontSizeSmall,
-        unselectedFontSize: AppConstants.fontSizeSmall,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Learn'),
-          BottomNavigationBarItem(icon: Icon(Icons.videocam), label: 'Practice'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
-        ],
-      ),
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      onTap: _onBottomNavTap,
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: AppConstants.primaryColor,
+      unselectedItemColor: AppConstants.textSecondary,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Learn'),
+        BottomNavigationBarItem(icon: Icon(Icons.videocam), label: 'Practice'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
+      ],
     );
   }
 }
 
-// ===================== WIDGETS =====================
+// ===================== Enhanced Widgets =====================
 
 class _WelcomeSection extends StatelessWidget {
   final String userName;
@@ -226,25 +194,27 @@ class _WelcomeSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            Text(
+              '$greeting, $userName! ',
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ).animate().fadeIn().slideX(begin: -0.3),
+            const Text('👋').animate(
+              onPlay: (controller) => controller.repeat(reverse: true),
+            ).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2), duration: 800.ms),
+          ],
+        ),
+        const SizedBox(height: 12),
         Text(
-          '$greeting, $userName! 👋',
-          style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+          "You've learned **$signsLearned** signs this week 🔥",
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppConstants.primaryColor,
+                fontWeight: FontWeight.w600,
               ),
-        )
-            .animate()
-            .fadeIn(duration: 400.ms)
-            .slideX(begin: -0.2, end: 0),
-        const SizedBox(height: 8),
-        Text(
-          "You've learned $signsLearned signs this week",
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppConstants.textSecondary,
-              ),
-        )
-            .animate()
-            .fadeIn(duration: 400.ms, delay: 100.ms)
-            .slideX(begin: -0.2, end: 0),
+        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.3),
       ],
     );
   }
@@ -259,62 +229,58 @@ class _DailyChallengeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppConstants.paddingLarge),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: AppConstants.primaryGradient,
-        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppConstants.primaryColor.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: AppConstants.primaryColor.withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
+        // Glassmorphism effect
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
-              Icon(Icons.emoji_events, color: Colors.white, size: 24),
-              SizedBox(width: 8),
+          const Row(
+            children: [
+              Icon(Icons.emoji_events, color: Colors.white, size: 32),
+              SizedBox(width: 12),
               Text(
-                AppConstants.dailyChallenge,
+                'Daily Challenge',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: AppConstants.fontSizeLarge,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             'Learn "$dailyChallenge"',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: AppConstants.fontSizeNormal,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 18),
           ),
-          const SizedBox(height: AppConstants.paddingMedium),
+          const SizedBox(height: 20),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(12),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.white.withOpacity(0.3),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-              minHeight: 8,
-            ).animate().fadeIn().slideX(),
+              minHeight: 10,
+              backgroundColor: Colors.white.withOpacity(0.25),
+              valueColor: const AlwaysStoppedAnimation(Colors.white),
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            '${(progress * 100).toInt()}% complete',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: AppConstants.fontSizeSmall,
-            ),
+            '${(progress * 100).toInt()}% Complete',
+            style: const TextStyle(color: Colors.white70),
           ),
-          const SizedBox(height: AppConstants.paddingMedium),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -322,20 +288,15 @@ class _DailyChallengeCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: AppConstants.primaryColor,
-                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text(
-                '${AppConstants.continueButton} →',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
+              child: const Text('Continue Challenge →', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms, delay: 200.ms)
-        .slideY(begin: 0.2, end: 0);
+    ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.95, 0.95));
   }
 }
 
@@ -347,153 +308,122 @@ class _QuickActionsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: AppConstants.paddingMedium),
+        Text('Quick Actions', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: QuickActionCard(
                 icon: Icons.school,
-                label: 'Learn\nMode',
+                label: 'Learn',
                 color: AppConstants.primaryColor,
                 onTap: () => Navigator.pushNamed(context, '/learning'),
-              ),
+              ).animate().fadeIn(delay: 100.ms).scale(),
             ),
-            const SizedBox(width: AppConstants.paddingMedium),
+            const SizedBox(width: 16),
             Expanded(
               child: QuickActionCard(
                 icon: Icons.videocam,
-                label: 'Practice\nMode',
+                label: 'Practice',
                 color: AppConstants.secondaryColor,
                 onTap: () => Navigator.pushNamed(context, '/practice'),
-              ),
+              ).animate().fadeIn(delay: 200.ms).scale(),
             ),
           ],
         ),
-        const SizedBox(height: AppConstants.paddingMedium),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: QuickActionCard(
                 icon: Icons.quiz,
-                label: 'Quiz\nMode',
+                label: 'Quiz',
                 color: AppConstants.accentColor,
                 onTap: () => Navigator.pushNamed(context, '/quiz'),
-              ),
+              ).animate().fadeIn(delay: 300.ms).scale(),
             ),
-            const SizedBox(width: AppConstants.paddingMedium),
+            const SizedBox(width: 16),
             Expanded(
               child: QuickActionCard(
                 icon: Icons.bar_chart,
                 label: 'Progress',
                 color: AppConstants.warningColor,
                 onTap: () => Navigator.pushNamed(context, '/profile'),
-              ),
+              ).animate().fadeIn(delay: 400.ms).scale(),
             ),
           ],
         ),
       ],
-    ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
+    );
   }
 }
+
+// _RecentActivitySection remains mostly the same but you can add .animate().shimmer() or scale on tap if you want more flair.
 
 class _RecentActivitySection extends StatelessWidget {
   final ProgressService progressService;
   const _RecentActivitySection({required this.progressService});
 
-  static const Map<String, IconData> activityIcons = {
-    'mastered': Icons.check_circle,
-    'learned': Icons.lightbulb,
-    'quiz': Icons.quiz,
-    'practiced': Icons.refresh,
-  };
-
-  static const Map<String, Color> activityColors = {
-    'mastered': AppConstants.accentColor,
-    'learned': AppConstants.primaryColor,
-    'quiz': AppConstants.warningColor,
-    'practiced': AppConstants.textSecondary,
-  };
-
   @override
   Widget build(BuildContext context) {
     final activities = progressService.getActivities();
-
-    if (activities.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Recent Activity',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: AppConstants.paddingMedium),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppConstants.paddingLarge),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-            ),
-            child: Text(
-              'No recent activities yet. Start learning to see your progress here!',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppConstants.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      );
-    }
+    final recent = activities.isNotEmpty ? activities.reversed.take(5).toList() : <dynamic>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Recent Activity',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: AppConstants.paddingMedium),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: activities.length < 3 ? activities.length : 3,
-          itemBuilder: (context, index) {
-            final activity = activities[index];
-            return Column(
-              children: [
-                ActivityItem(
-                  icon: activityIcons[activity['type']] ?? Icons.help,
-                  iconColor: activityColors[activity['type']] ?? Colors.grey,
-                  title: activity['title'] as String,
-                  time: _formatTimeAgo(activity['timestamp'] as DateTime),
-                ).animate().fadeIn(duration: 300.ms, delay: (index * 100).ms),
-                if (index < activities.length - 1) const Divider(height: 1),
-              ],
-            );
-          },
-        ),
+        const SizedBox(height: 12),
+        if (recent.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.03),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'No recent activity yet. Start learning to see progress here!',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppConstants.textSecondary),
+            ),
+          )
+        else
+          Column(
+            children: recent.map((a) {
+              final title = (a['title'] as String?) ?? (a['type'] as String?) ?? 'Activity';
+              final timestamp = a['timestamp'] is DateTime ? a['timestamp'] as DateTime : null;
+              final timeText = timestamp != null ? MaterialLocalizations.of(context).formatFullDate(timestamp) : '';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: const Icon(Icons.history, color: AppConstants.primaryColor),
+                  title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(timeText, style: TextStyle(color: AppConstants.textSecondary)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // optionally navigate to a detail screen for the activity
+                  },
+                ),
+              );
+            }).toList(),
+          ),
       ],
     );
-  }
-
-  String _formatTimeAgo(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inDays > 0) return '${difference.inDays}d ago';
-    if (difference.inHours > 0) return '${difference.inHours}h ago';
-    if (difference.inMinutes > 0) return '${difference.inMinutes}m ago';
-    return 'Just now';
   }
 }
