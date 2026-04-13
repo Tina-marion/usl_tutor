@@ -57,6 +57,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         border: Border.all(color: AppConstants.dividerColor),
       );
+      
+        get InferenceService => null;
 
   @override
   void initState() {

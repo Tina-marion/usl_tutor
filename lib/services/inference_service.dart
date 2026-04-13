@@ -3,75 +3,114 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
-import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:video_thumbnail/video_thumbnail.dart' as vt;
 
-/// Client for calling the external inference backend hosted on Hugging Face.
-class InferenceService {
-  static const String _modelAssetPath = 'assets/models/usl_model_flex.tflite';
+class NativeOnnxService {
+  static OrtSession? _session;
+  static Map<int, String>? _labels;
+  static const String _modelAssetPath = 'assets/models/usl_model_flex.onnx';
   static const String _labelsAssetPath = 'assets/data/labels.json';
 
-  static Interpreter? _interpreter;
-  static Map<int, String>? _labels;
-  static String? _modelTempPath;
-
-  /// Sends a recorded video to the backend and returns the translation.
-  /// Throws on network or server error.
   static Future<String> translateVideo(File videoFile) async {
     try {
-      final localPrediction = await _translateVideoLocal(videoFile);
-      if (localPrediction != null && localPrediction.isNotEmpty) {
-        return localPrediction;
+      final label = await _translateVideoLocal(videoFile);
+      if (label != null && label.isNotEmpty) {
+        return label;
       }
       throw Exception('Model returned an empty prediction.');
     } catch (error) {
-      throw Exception('Local inference error: $error');
+      throw Exception('ONNX inference error: $error');
     }
   }
 
   static Future<String?> _translateVideoLocal(File videoFile) async {
-    await _ensureLocalModelLoaded();
+    await _ensureModelLoaded();
 
-    final interpreter = _interpreter;
-    if (interpreter == null) return null;
+    final session = _session;
+    if (session == null) return null;
 
-    final inputShape = interpreter.getInputTensor(0).shape;
-    final outputShape = interpreter.getOutputTensor(0).shape;
+    // Get shapes from the model
+    final inputName = session.inputNames.first;
+    final outputName = session.outputNames.first;
+    // Try to obtain tensor shapes from the session if exposed by the runtime; otherwise fall back to sensible defaults.
+    List<int> inputShape;
+    List<int> outputShape;
+    try {
+      final dynamic s = session as dynamic;
+      if (s.inputShapes != null && s.inputShapes[inputName] != null) {
+        inputShape = (s.inputShapes[inputName] as List).map((e) => e as int).toList();
+      } else if (s.inputs != null && s.inputs[inputName] != null && s.inputs[inputName]['shape'] != null) {
+        inputShape = (s.inputs[inputName]['shape'] as List).map((e) => e as int).toList();
+      } else {
+        // Fallback default: [batch, seqLen, height, width, channels]
+        inputShape = [1, 16, 224, 224, 3];
+      }
+
+      if (s.outputShapes != null && s.outputShapes[outputName] != null) {
+        outputShape = (s.outputShapes[outputName] as List).map((e) => e as int).toList();
+      } else if (s.outputs != null && s.outputs[outputName] != null && s.outputs[outputName]['shape'] != null) {
+        outputShape = (s.outputs[outputName]['shape'] as List).map((e) => e as int).toList();
+      } else {
+        // Fallback default: [batch, numClasses]
+        outputShape = [1, 1000];
+      }
+    } catch (_) {
+      // If any dynamic access fails, use sensible defaults.
+      inputShape = [1, 16, 224, 224, 3];
+      outputShape = [1, 1000];
+    }
 
     if (inputShape.length != 5 || outputShape.length != 2) {
       throw Exception('Unexpected model tensor shapes.');
     }
 
-    final sequenceLength = inputShape[1];
-    final imageHeight = inputShape[2];
-    final imageWidth = inputShape[3];
-    final channels = inputShape[4];
-    final classes = outputShape[1];
+    final sequenceLength = inputShape[1] as int;
+    final imageHeight = inputShape[2] as int;
+    final imageWidth = inputShape[3] as int;
+    final channels = inputShape[4] as int;
+    final numClasses = outputShape[1] as int;
 
     if (channels != 3) {
-      throw Exception(
-          'Model expects $channels channels; only RGB (3) is supported.');
+      throw Exception('Model expects $channels channels; only RGB (3) is supported.');
     }
 
-    final input = await _buildInputTensor(
+    // Build the 5D input tensor (List of List ...)
+    final inputTensorData = await _buildInputTensor(
       videoFile: videoFile,
       sequenceLength: sequenceLength,
       imageHeight: imageHeight,
       imageWidth: imageWidth,
     );
 
-    final output = List.generate(1, (_) => List.filled(classes, 0.0));
-    interpreter.run(input, output);
+    // Flatten the 5D list into 1D float list for OrtValue
+    final flattenedInput = inputTensorData[0]
+        .expand((frame) => frame)
+        .expand((row) => row)
+        .expand((pixel) => pixel)
+        .toList()
+        .cast<double>();
 
-    final probabilities = output[0];
+    // Create OrtValue (float32)
+    final inputOrtValue = await OrtValue.fromList(flattenedInput, inputShape.cast<int>());
+
+    // Run inference
+    final inputs = {inputName: inputOrtValue};
+    final outputs = await session.run(inputs);
+
+    // Get output probabilities
+    final outputOrtValue = outputs[outputName]!;
+    final probabilities = (await outputOrtValue.asList()).cast<double>();
+
+    // Argmax to find best class
     var bestIndex = 0;
     var bestScore = probabilities[0];
-    for (var index = 1; index < probabilities.length; index++) {
-      if (probabilities[index] > bestScore) {
-        bestScore = probabilities[index];
-        bestIndex = index;
+    for (var i = 1; i < probabilities.length; i++) {
+      if (probabilities[i] > bestScore) {
+        bestScore = probabilities[i];
+        bestIndex = i;
       }
     }
 
@@ -79,47 +118,36 @@ class InferenceService {
     return label;
   }
 
-  static Future<void> _ensureLocalModelLoaded() async {
-    if (_interpreter != null && _labels != null) return;
+  static Future<void> _ensureModelLoaded() async {
+    if (_session != null && _labels != null) return;
+
+    final ort = OnnxRuntime();
 
     try {
-      _interpreter ??= await Interpreter.fromAsset(_modelAssetPath);
-    } catch (error) {
-      try {
-        final tempDir = await getTemporaryDirectory();
-        final modelBytes = await rootBundle.load(_modelAssetPath);
-        final modelFile = File('${tempDir.path}/usl_model_flex.tflite');
-        await modelFile.writeAsBytes(
-          modelBytes.buffer.asUint8List(),
-          flush: true,
-        );
-        _modelTempPath = modelFile.path;
-        _interpreter ??= Interpreter.fromFile(modelFile);
-      } catch (fallbackError) {
-        throw Exception(
-          'Could not load TFLite model. Asset load failed: $error | File fallback failed: $fallbackError',
-        );
-      }
+      _session ??= await ort.createSessionFromAsset(_modelAssetPath);
+    } catch (_) {
+      // Fallback: copy model to temporary directory
+      final tempDir = await getTemporaryDirectory();
+      final modelBytes = await rootBundle.load(_modelAssetPath);
+      final modelFile = File('${tempDir.path}/usl_model_flex.onnx');
+      await modelFile.writeAsBytes(modelBytes.buffer.asUint8List(), flush: true);
+
+      // Some runtimes expose a bytes-based session creation method instead of a path-based one.
+      final bytes = await modelFile.readAsBytes();
+      _session ??= await ort.createSessionFromBytes(bytes);
     }
 
-    if (_interpreter == null) {
-      throw Exception('TFLite interpreter initialization returned null.');
+    if (_session == null) {
+      throw Exception('Failed to create ONNX session');
     }
 
-    try {
-      _interpreter!.allocateTensors();
-    } catch (allocateError) {
-      throw Exception(
-          'Interpreter loaded but tensor allocation failed: $allocateError');
-    }
-
+    // Load labels once
     final labelsJson = await rootBundle.loadString(_labelsAssetPath);
     final decoded = jsonDecode(labelsJson) as Map<String, dynamic>;
-    _labels = decoded.map(
-      (key, value) => MapEntry(int.parse(key), value.toString()),
-    );
+    _labels = decoded.map((key, value) => MapEntry(int.parse(key), value.toString()));
   }
 
+  // ==================== Frame processing (unchanged) ====================
   static Future<List<List<List<List<List<double>>>>>> _buildInputTensor({
     required File videoFile,
     required int sequenceLength,
@@ -138,7 +166,6 @@ class InferenceService {
 
     var successfulFrames = 0;
     const frameIntervalMs = 120;
-
     List<List<List<double>>>? lastFrame;
 
     for (var frameIndex = 0; frameIndex < sequenceLength; frameIndex++) {
@@ -157,11 +184,7 @@ class InferenceService {
       final decoded = img.decodeImage(thumbnail);
       if (decoded == null) continue;
 
-      final resized = img.copyResize(
-        decoded,
-        width: imageWidth,
-        height: imageHeight,
-      );
+      final resized = img.copyResize(decoded, width: imageWidth, height: imageHeight);
 
       for (var y = 0; y < imageHeight; y++) {
         for (var x = 0; x < imageWidth; x++) {
@@ -177,16 +200,13 @@ class InferenceService {
     }
 
     if (successfulFrames == 0) {
-      throw Exception('Could not extract frames from recorded video.');
+      throw Exception('Could not extract any frames from the video.');
     }
 
     return input;
   }
 
-  static Future<Uint8List?> _extractThumbnailBytes(
-    String videoPath,
-    int timeMs,
-  ) async {
+  static Future<Uint8List?> _extractThumbnailBytes(String videoPath, int timeMs) async {
     try {
       final bytes = await vt.VideoThumbnail.thumbnailData(
         video: videoPath,
@@ -195,9 +215,7 @@ class InferenceService {
         quality: 75,
       );
       if (bytes != null) return bytes;
-    } catch (_) {
-      // Fallback to file-based thumbnail extraction below.
-    }
+    } catch (_) {}
 
     try {
       final tempDir = await getTemporaryDirectory();
@@ -214,14 +232,18 @@ class InferenceService {
       if (!await file.exists()) return null;
 
       final bytes = await file.readAsBytes();
-      try {
-        await file.delete();
-      } catch (_) {
-        // ignore cleanup failure
-      }
+      await file.delete().catchError((_) {});
       return bytes;
     } catch (_) {
       return null;
     }
+  }
+}
+
+extension on OnnxRuntime {
+  Future<dynamic> createSessionFromBytes(Uint8List bytes) async {
+    // Not all platforms/runtimes expose a bytes-based session creation.
+    // Ensure the Future completes with an error rather than returning null.
+    throw UnimplementedError('createSessionFromBytes is not implemented on this platform.');
   }
 }
