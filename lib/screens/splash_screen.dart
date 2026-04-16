@@ -26,72 +26,79 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    // Check if user has created a profile
     final user = _userService.getUserProfile();
     if (user.name == 'USL Learner') {
-      // Profile not customized, go to profile creation
       Navigator.pushReplacementNamed(context, '/profile-creation');
     } else {
-      // Profile already created, go to onboarding or home
-      Navigator.pushReplacementNamed(context, '/onboarding');
+      Navigator.pushReplacementNamed(context, '/onboarding'); // or '/home' if you prefer
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppConstants.backgroundGradient,
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLogo(),
-              const SizedBox(height: AppConstants.paddingLarge),
-              Text(
-                AppConstants.appName,
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: Colors.white,
-                      fontSize: 42,
-                      fontWeight: FontWeight.bold,
-                    ),
-              )
-                  .animate()
-                  .fadeIn(duration: 600.ms, delay: 200.ms)
-                  .slideY(begin: 0.3, end: 0),
-              const SizedBox(height: AppConstants.paddingSmall),
-              Text(
-                AppConstants.appTagline,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w400,
-                    ),
-              )
-                  .animate()
-                  .fadeIn(duration: 600.ms, delay: 400.ms)
-                  .slideY(begin: 0.3, end: 0),
-              const SizedBox(height: AppConstants.paddingXL * 2),
-              _buildLoadingIndicator(),
-            ],
-          ),
+      backgroundColor: const Color(0xFFF8F9FA), // Clean light background like HomeScreen
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Big Animated Logo
+            _buildAnimatedLogo(),
+
+            const SizedBox(height: 40),
+
+            // App Name
+            Text(
+              AppConstants.appName,
+              style: const TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.w900,
+                color: Colors.black87,
+                letterSpacing: -1,
+              ),
+            )
+                .animate()
+                .fadeIn(duration: 700.ms, delay: 200.ms)
+                .slideY(begin: 0.4, end: 0, curve: Curves.easeOutCubic),
+
+            const SizedBox(height: 12),
+
+            // Tagline
+            Text(
+              AppConstants.appTagline,
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            )
+                .animate()
+                .fadeIn(duration: 700.ms, delay: 500.ms)
+                .slideY(begin: 0.3, end: 0),
+
+            const SizedBox(height: 80),
+
+            // Loading Indicator
+            _buildLoadingIndicator(),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLogo() {
+  Widget _buildAnimatedLogo() {
     return Container(
-      width: 120,
-      height: 120,
+      width: 180,
+      height: 180,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppConstants.radiusXL),
+        shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 20,
+            color: Colors.green.withOpacity(0.25),
+            blurRadius: 30,
+            spreadRadius: 5,
             offset: const Offset(0, 10),
           ),
         ],
@@ -99,35 +106,46 @@ class _SplashScreenState extends State<SplashScreen> {
       child: Center(
         child: Icon(
           Icons.sign_language,
-          size: AppConstants.iconSizeXL * 1.5,
-          color: AppConstants.primaryColor,
+          size: 110,
+          color: Colors.green.shade600,
         ),
       ),
-    ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack).fadeIn();
+    )
+        .animate()
+        .scale(
+          duration: 800.ms,
+          curve: Curves.elasticOut,
+        )
+        .then()
+        .shimmer(duration: 1200.ms, delay: 300.ms)
+        .fadeIn();
   }
 
   Widget _buildLoadingIndicator() {
     return Column(
       children: [
-        SizedBox(
-          width: 40,
-          height: 40,
+        const SizedBox(
+          width: 48,
+          height: 48,
           child: CircularProgressIndicator(
-            strokeWidth: 3,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Colors.white.withOpacity(0.8),
-            ),
+            strokeWidth: 4.5,
+            valueColor: AlwaysStoppedAnimation(Colors.green),
           ),
         )
             .animate(onPlay: (controller) => controller.repeat())
-            .fadeIn(duration: 400.ms, delay: 800.ms),
-        const SizedBox(height: AppConstants.paddingMedium),
+            .rotate(duration: 1800.ms),
+
+        const SizedBox(height: 24),
+
         Text(
           AppConstants.loadingMessage,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withOpacity(0.7),
-              ),
-        ).animate().fadeIn(duration: 400.ms, delay: 1000.ms),
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
+        ).animate().fadeIn(delay: 600.ms),
       ],
     );
   }
