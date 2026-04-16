@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'dart:ui' show ImageFilter;
 
 import '../constants/app_constants.dart';
 import '../services/progress_service.dart';
-import '../services/user_service.dart';
-import '../widgets/activity_item.dart';
-import '../widgets/quick_action_card.dart';   // we'll enhance this too
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,30 +12,23 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Demo/default state values to prevent undefined name errors.
-  // Replace or initialize these from your real user/progress services as needed.
-  String userName = 'Student';
-  int signsLearnedThisWeek = 5;
+  String userName = 'Joy';
+  int signsLearnedThisWeek = 12;
+  int currentStreak = 7;
   String greeting = 'Hello';
   String dailyChallenge = 'Basic Greetings';
-  double dailyChallengeProgress = 0.2;
+  double dailyChallengeProgress = 0.65;
 
-  // ... (your existing state variables and methods remain the same)
-  // Keep _initializeServices, _onBottomNavTap, _addTestActivities, greeting, etc.
-
-  // Progress service instance used throughout the screen
   final ProgressService _progressService = ProgressService();
-
-  // Loading flag used by the build method
   bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0B2E), // Deep playful indigo background
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: _buildAppBar(),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : RefreshIndicator(
               onRefresh: () async {
                 await _progressService.init();
@@ -47,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -55,17 +44,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       userName: userName,
                       signsLearned: signsLearnedThisWeek,
                       greeting: greeting,
+                      streak: currentStreak,
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
+                    _StreakCard(streak: currentStreak),
+                    const SizedBox(height: 32),
                     _DailyChallengeCard(
                       dailyChallenge: dailyChallenge,
                       progress: dailyChallengeProgress,
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 36),
                     _QuickActionsSection(),
                     const SizedBox(height: 40),
                     _RecentActivitySection(progressService: _progressService),
-                    const SizedBox(height: 100),
+                    const SizedBox(height: 80),
                   ],
                 ),
               ),
@@ -75,14 +67,11 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () => Navigator.pushNamed(context, '/practice'),
         icon: const Icon(Icons.videocam_rounded, size: 28),
         label: const Text('Start Video Practice', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.pinkAccent,
-        elevation: 10,
+        backgroundColor: Colors.green,
+        elevation: 8,
       ).animate().scale(duration: 400.ms),
     );
   }
-
-  // AppBar and BottomNav remain mostly the same (you can make title more colourful if you want)
-  // Simple implementations to ensure methods exist and compile.
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
@@ -90,41 +79,36 @@ class _HomeScreenState extends State<HomeScreen> {
       elevation: 0,
       title: const Text(
         'USL Tutor',
-        style: TextStyle(fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontWeight: FontWeight.w800,
+          color: Colors.black87,
+          fontSize: 24,
+        ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_none),
-          onPressed: () {
-            // placeholder - add notification handling if needed
-          },
+          icon: const Icon(Icons.notifications_none, color: Colors.black87),
+          onPressed: () {},
         ),
       ],
     );
   }
 
   Widget _buildBottomNavigationBar() {
-    // Minimal bottom bar to avoid undefined method error; replace with your full implementation if needed.
     return BottomAppBar(
-      color: Colors.transparent,
-      elevation: 0,
+      color: Colors.white,
+      elevation: 12,
+      shape: const AutomaticNotchedShape(
+        RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            IconButton(
-              icon: const Icon(Icons.school_rounded, color: Colors.white),
-              onPressed: () => Navigator.pushNamed(context, '/learning'),
-            ),
-            IconButton(
-              icon: const Icon(Icons.videocam_rounded, color: Colors.white),
-              onPressed: () => Navigator.pushNamed(context, '/practice'),
-            ),
-            IconButton(
-              icon: const Icon(Icons.person_rounded, color: Colors.white),
-              onPressed: () => Navigator.pushNamed(context, '/profile'),
-            ),
+            IconButton(icon: const Icon(Icons.school_rounded, color: Colors.blue, size: 28), onPressed: () => Navigator.pushNamed(context, '/learning')),
+            IconButton(icon: const Icon(Icons.videocam_rounded, color: Colors.green, size: 28), onPressed: () => Navigator.pushNamed(context, '/practice')),
+            IconButton(icon: const Icon(Icons.person_rounded, color: Colors.orange, size: 28), onPressed: () => Navigator.pushNamed(context, '/profile')),
           ],
         ),
       ),
@@ -132,14 +116,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ===================== Playful & Colourful Widgets =====================
+// ===================== Enhanced Sections =====================
 
 class _WelcomeSection extends StatelessWidget {
   final String userName;
   final int signsLearned;
   final String greeting;
+  final int streak;
 
-  const _WelcomeSection({required this.userName, required this.signsLearned, required this.greeting});
+  const _WelcomeSection({
+    required this.userName,
+    required this.signsLearned,
+    required this.greeting,
+    required this.streak,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -148,31 +138,103 @@ class _WelcomeSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            Flexible(
+            Expanded(
               child: Text(
-                '$greeting, $userName! ',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                '$greeting, $userName!',
+                style: const TextStyle(
+                  fontSize: 32,
                   fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  fontSize: 34,
+                  color: Colors.black87,
+                  height: 1.1,
                 ),
-              ).animate().fadeIn().slideX(begin: -0.4),
+              ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2),
             ),
-            const Text('✨👋').animate(
-              onPlay: (controller) => controller.repeat(reverse: true, period: 800.ms),
-            ).scale(begin: const Offset(0.7, 0.7), end: const Offset(1.25, 1.25)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.local_fire_department, color: Colors.orange, size: 22),
+                  const SizedBox(width: 6),
+                  Text(
+                    '$streak day streak',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
         Text(
-          "You've learned **$signsLearned** signs this week! 🔥",
+          "You've learned $signsLearned signs this week! 🔥",
           style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.yellowAccent,
+            fontSize: 19,
+            fontWeight: FontWeight.w600,
+            color: Color.fromARGB(255, 99, 51, 109),
           ),
-        ).animate().fadeIn(delay: 200.ms).shimmer(duration: 1200.ms),
+        ),
       ],
+    );
+  }
+}
+
+class _StreakCard extends StatelessWidget {
+  final int streak;
+
+  const _StreakCard({required this.streak});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 20, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.whatshot_rounded, color: Colors.orange, size: 42),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "You're on a roll!",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '$streak day learning streak',
+                  style: const TextStyle(fontSize: 15, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.orange,
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: const Text(
+              'Keep it up!',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -188,60 +250,68 @@ class _DailyChallengeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF6B6B), Color(0xFF4ECDC4)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
         boxShadow: [
-          BoxShadow(color: Colors.pink.withOpacity(0.4), blurRadius: 25, offset: const Offset(0, 12)),
+          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.emoji_events_rounded, color: Colors.white, size: 36),
-              SizedBox(width: 12),
-              Text('Daily Challenge', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+              const Icon(Icons.emoji_events_rounded, color: Color.fromARGB(255, 243, 210, 25), size: 38),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Text(
+                  'Daily Challenge',
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Text(
             'Master "$dailyChallenge" today!',
-            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 12,
-              backgroundColor: Colors.white.withOpacity(0.3),
-              valueColor: const AlwaysStoppedAnimation(Colors.white),
+              minHeight: 14,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: const AlwaysStoppedAnimation(Color.fromARGB(255, 248, 110, 17)),
             ),
           ),
-          const SizedBox(height: 8),
-          Text("${(progress * 100).toInt()}% done — You're crushing it! 💪", style: const TextStyle(color: Colors.white70)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("${(progress * 100).toInt()}% completed", style: const TextStyle(color: Colors.grey)),
+              const Text("Keep going!", style: TextStyle(color: Color.fromARGB(255, 44, 23, 71), fontWeight: FontWeight.w600)),
+            ],
+          ),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/learning'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFFFF6B6B),
+                backgroundColor: const Color.fromARGB(255, 44, 28, 71),
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                elevation: 3,
               ),
-              child: const Text('Go Practice Now →', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: const Text('Start Challenge →', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.92, 0.92));
+    );
   }
 }
 
@@ -255,50 +325,22 @@ class _QuickActionsSection extends StatelessWidget {
       children: [
         const Text(
           'Quick Actions',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 20,),
         Row(
           children: [
-            Expanded(
-              child: _GlassQuickActionCard(
-                icon: Icons.school_rounded,
-                label: 'Learn',
-                color: Colors.purpleAccent,
-                onTap: () => Navigator.pushNamed(context, '/learning'),
-              ),
-            ),
+            Expanded(child: _SimpleActionCard(icon: Icons.school_rounded, label: 'Learn', color: Colors.blue, route: '/learning')),
             const SizedBox(width: 16),
-            Expanded(
-              child: _GlassQuickActionCard(
-                icon: Icons.videocam_rounded,
-                label: 'Practice',
-                color: Colors.cyanAccent,
-                onTap: () => Navigator.pushNamed(context, '/practice'),
-              ),
-            ),
+            Expanded(child: _SimpleActionCard(icon: Icons.videocam_rounded, label: 'Practice', color: const Color.fromARGB(255, 97, 43, 97), route: '/practice')),
           ],
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(
-              child: _GlassQuickActionCard(
-                icon: Icons.quiz_rounded,
-                label: 'Quiz',
-                color: Colors.orangeAccent,
-                onTap: () => Navigator.pushNamed(context, '/quiz'),
-              ),
-            ),
+            Expanded(child: _SimpleActionCard(icon: Icons.quiz_rounded, label: 'Quiz', color: Colors.orange, route: '/quiz')),
             const SizedBox(width: 16),
-            Expanded(
-              child: _GlassQuickActionCard(
-                icon: Icons.bar_chart_rounded,
-                label: 'Progress',
-                color: Colors.greenAccent,
-                onTap: () => Navigator.pushNamed(context, '/profile'),
-              ),
-            ),
+            Expanded(child: _SimpleActionCard(icon: Icons.bar_chart_rounded, label: 'Progress', color: Colors.green, route: '/profile')),
           ],
         ),
       ],
@@ -306,110 +348,52 @@ class _QuickActionsSection extends StatelessWidget {
   }
 }
 
-// New Glassmorphic Quick Action Card
-class _GlassQuickActionCard extends StatelessWidget {
+class _SimpleActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final VoidCallback onTap;
+  final String route;
 
-  const _GlassQuickActionCard({
+  const _SimpleActionCard({
     required this.icon,
     required this.label,
     required this.color,
-    required this.onTap,
+    required this.route,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => Navigator.pushNamed(context, route),
       child: Container(
-        height: 160,
+        height: 158,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),        // semi-transparent
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
           boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.25),
-              blurRadius: 20,
-              spreadRadius: 2,
-              offset: const Offset(0, 8),
+            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 8)),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 52, color: color),
+            const SizedBox(height: 14),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),   // Glass blur effect
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.white.withOpacity(0.15), Colors.transparent],
-                  begin: Alignment.topLeft,
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 48, color: color)
-                      .animate()
-                      .scale(duration: 400.ms, curve: Curves.elasticOut),
-                  const SizedBox(height: 12),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ).animate().fadeIn().scale(begin: const Offset(0.85, 0.85)).then().shimmer(duration: 800.ms),
+      ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.92, 0.92)),
     );
   }
 }
 
-// Simple Recent Activity section to satisfy reference from HomeScreen.
-// Replace the mock loading and sample data with real ProgressService usage as needed.
-class _RecentActivitySection extends StatefulWidget {
+class _RecentActivitySection extends StatelessWidget {
   final ProgressService progressService;
 
-  const _RecentActivitySection({Key? key, required this.progressService}) : super(key: key);
-
-  @override
-  State<_RecentActivitySection> createState() => _RecentActivitySectionState();
-}
-
-class _RecentActivitySectionState extends State<_RecentActivitySection> {
-  List<String> _activities = [];
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadActivities();
-  }
-
-  Future<void> _loadActivities() async {
-    // Simulated load; replace with actual widget.progressService calls if available.
-    await Future.delayed(const Duration(milliseconds: 300));
-    setState(() {
-      _activities = [
-        'Practiced "Hello" — 5m',
-        'Completed Quiz: Greetings — 8/10',
-        'Watched tutorial: Fingerspelling — 12m',
-      ];
-      _loading = false;
-    });
-  }
+  const _RecentActivitySection({required this.progressService});
 
   @override
   Widget build(BuildContext context) {
@@ -418,28 +402,36 @@ class _RecentActivitySectionState extends State<_RecentActivitySection> {
       children: [
         const Text(
           'Recent Activity',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
         ),
-        const SizedBox(height: 16),
-        if (_loading)
-          const Center(child: CircularProgressIndicator(color: Colors.white))
-        else if (_activities.isEmpty)
-          const Text('No recent activity yet.', style: TextStyle(color: Colors.white70))
-        else
-          Column(
-            children: _activities
-                .map(
-                  (a) => Card(
-                    color: Colors.white12,
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: const Icon(Icons.history, color: Colors.white70),
-                      title: Text(a, style: const TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                )
-                .toList(),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 18, offset: const Offset(0, 8)),
+            ],
           ),
+          child: const Column(
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(backgroundColor: Colors.green, child: Icon(Icons.check, color: Colors.white)),
+                title: Text('Completed "Hello"', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                subtitle: Text('2 days ago', style: TextStyle(color: Colors.grey)),
+              ),
+              Divider(height: 24),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(backgroundColor: Colors.blue, child: Icon(Icons.play_arrow, color: Colors.white)),
+                title: Text('Practice Session', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                subtitle: Text('4 days ago', style: TextStyle(color: Colors.grey)),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
