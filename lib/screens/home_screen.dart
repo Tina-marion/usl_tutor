@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../constants/app_constants.dart';
 import '../services/progress_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -66,7 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.pushNamed(context, '/practice'),
         icon: const Icon(Icons.videocam_rounded, size: 28),
-        label: const Text('Start Video Practice', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: const Text('Start Video Practice',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green,
         elevation: 8,
       ).animate().scale(duration: 400.ms),
@@ -99,16 +99,26 @@ class _HomeScreenState extends State<HomeScreen> {
       color: Colors.white,
       elevation: 12,
       shape: const AutomaticNotchedShape(
-        RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            IconButton(icon: const Icon(Icons.school_rounded, color: Color.fromARGB(255, 43, 14, 41), size: 28), onPressed: () => Navigator.pushNamed(context, '/learning')),
-            IconButton(icon: const Icon(Icons.videocam_rounded, color: Color.fromARGB(255, 43, 14, 41), size: 28), onPressed: () => Navigator.pushNamed(context, '/practice')),
-            IconButton(icon: const Icon(Icons.person_rounded, color: Color.fromARGB(255, 43, 14, 41), size: 28), onPressed: () => Navigator.pushNamed(context, '/profile')),
+            IconButton(
+                icon: const Icon(Icons.school_rounded,
+                    color: Color.fromARGB(255, 43, 14, 41), size: 28),
+                onPressed: () => Navigator.pushNamed(context, '/learning')),
+            IconButton(
+                icon: const Icon(Icons.videocam_rounded,
+                    color: Color.fromARGB(255, 43, 14, 41), size: 28),
+                onPressed: () => Navigator.pushNamed(context, '/practice')),
+            IconButton(
+                icon: const Icon(Icons.person_rounded,
+                    color: Color.fromARGB(255, 43, 14, 41), size: 28),
+                onPressed: () => Navigator.pushNamed(context, '/profile')),
           ],
         ),
       ),
@@ -158,7 +168,8 @@ class _WelcomeSection extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.local_fire_department, color: Colors.orange, size: 22),
+                  const Icon(Icons.local_fire_department,
+                      color: Colors.orange, size: 22),
                   const SizedBox(width: 6),
                   Text(
                     '$streak day streak',
@@ -200,7 +211,10 @@ class _StreakCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 20, offset: const Offset(0, 8)),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.07),
+              blurRadius: 20,
+              offset: const Offset(0, 8)),
         ],
       ),
       child: Row(
@@ -230,7 +244,8 @@ class _StreakCard extends StatelessWidget {
             ),
             child: const Text(
               'Keep it up!',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -243,7 +258,8 @@ class _DailyChallengeCard extends StatelessWidget {
   final String dailyChallenge;
   final double progress;
 
-  const _DailyChallengeCard({required this.dailyChallenge, required this.progress});
+  const _DailyChallengeCard(
+      {required this.dailyChallenge, required this.progress});
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +269,10 @@ class _DailyChallengeCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -261,12 +280,16 @@ class _DailyChallengeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.emoji_events_rounded, color: Color.fromARGB(255, 243, 210, 25), size: 38),
+              const Icon(Icons.emoji_events_rounded,
+                  color: Color.fromARGB(255, 243, 210, 25), size: 38),
               const SizedBox(width: 14),
               const Expanded(
                 child: Text(
                   'Daily Challenge',
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87),
                 ),
               ),
             ],
@@ -274,7 +297,10 @@ class _DailyChallengeCard extends StatelessWidget {
           const SizedBox(height: 18),
           Text(
             'Master "$dailyChallenge" today!',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87),
           ),
           const SizedBox(height: 22),
           ClipRRect(
@@ -283,15 +309,20 @@ class _DailyChallengeCard extends StatelessWidget {
               value: progress,
               minHeight: 14,
               backgroundColor: Colors.grey.shade200,
-              valueColor: const AlwaysStoppedAnimation(Color.fromARGB(255, 248, 110, 17)),
+              valueColor: const AlwaysStoppedAnimation(
+                  Color.fromARGB(255, 248, 110, 17)),
             ),
           ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${(progress * 100).toInt()}% completed", style: const TextStyle(color: Colors.grey)),
-              const Text("Keep going!", style: TextStyle(color: Color.fromARGB(255, 44, 23, 71), fontWeight: FontWeight.w600)),
+              Text("${(progress * 100).toInt()}% completed",
+                  style: const TextStyle(color: Colors.grey)),
+              const Text("Keep going!",
+                  style: TextStyle(
+                      color: Color.fromARGB(255, 44, 23, 71),
+                      fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 24),
@@ -303,10 +334,12 @@ class _DailyChallengeCard extends StatelessWidget {
                 backgroundColor: const Color.fromARGB(255, 44, 28, 71),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(22)),
                 elevation: 3,
               ),
-              child: const Text('Start Challenge →', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+              child: const Text('Start Challenge →',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -325,22 +358,45 @@ class _QuickActionsSection extends StatelessWidget {
       children: [
         const Text(
           'Quick Actions',
-          style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
+          style: TextStyle(
+              fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
         ),
-        const SizedBox(height: 20,),
+        const SizedBox(
+          height: 20,
+        ),
         Row(
           children: [
-            Expanded(child: _SimpleActionCard(icon: Icons.school_rounded, label: 'Learn', color: Colors.blue, route: '/learning')),
+            Expanded(
+                child: _SimpleActionCard(
+                    icon: Icons.school_rounded,
+                    label: 'Learn',
+                    color: Colors.blue,
+                    route: '/learning')),
             const SizedBox(width: 16),
-            Expanded(child: _SimpleActionCard(icon: Icons.videocam_rounded, label: 'Practice', color: const Color.fromARGB(255, 97, 43, 97), route: '/practice')),
+            Expanded(
+                child: _SimpleActionCard(
+                    icon: Icons.videocam_rounded,
+                    label: 'Practice',
+                    color: const Color.fromARGB(255, 97, 43, 97),
+                    route: '/practice')),
           ],
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _SimpleActionCard(icon: Icons.quiz_rounded, label: 'Quiz', color: Colors.orange, route: '/quiz')),
+            Expanded(
+                child: _SimpleActionCard(
+                    icon: Icons.quiz_rounded,
+                    label: 'Quiz',
+                    color: Colors.orange,
+                    route: '/quiz')),
             const SizedBox(width: 16),
-            Expanded(child: _SimpleActionCard(icon: Icons.bar_chart_rounded, label: 'Progress', color: Colors.green, route: '/profile')),
+            Expanded(
+                child: _SimpleActionCard(
+                    icon: Icons.bar_chart_rounded,
+                    label: 'Progress',
+                    color: Colors.green,
+                    route: '/profile')),
           ],
         ),
       ],
@@ -371,7 +427,10 @@ class _SimpleActionCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 8)),
+            BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 8)),
           ],
         ),
         child: Column(
@@ -381,11 +440,17 @@ class _SimpleActionCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               label,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87),
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87),
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.92, 0.92)),
+      )
+          .animate()
+          .fadeIn(duration: 500.ms)
+          .scale(begin: const Offset(0.92, 0.92)),
     );
   }
 }
@@ -402,7 +467,8 @@ class _RecentActivitySection extends StatelessWidget {
       children: [
         const Text(
           'Recent Activity',
-          style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
+          style: TextStyle(
+              fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
         ),
         const SizedBox(height: 14),
         Container(
@@ -411,23 +477,36 @@ class _RecentActivitySection extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 18, offset: const Offset(0, 8)),
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8)),
             ],
           ),
           child: const Column(
             children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(backgroundColor: Colors.green, child: Icon(Icons.check, color: Colors.white)),
-                title: Text('Completed "Hello"', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                subtitle: Text('2 days ago', style: TextStyle(color: Colors.grey)),
+                leading: CircleAvatar(
+                    backgroundColor: Colors.green,
+                    child: Icon(Icons.check, color: Colors.white)),
+                title: Text('Completed "Hello"',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                subtitle:
+                    Text('2 days ago', style: TextStyle(color: Colors.grey)),
               ),
               Divider(height: 24),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(backgroundColor: Colors.blue, child: Icon(Icons.play_arrow, color: Colors.white)),
-                title: Text('Practice Session', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                subtitle: Text('4 days ago', style: TextStyle(color: Colors.grey)),
+                leading: CircleAvatar(
+                    backgroundColor: Colors.blue,
+                    child: Icon(Icons.play_arrow, color: Colors.white)),
+                title: Text('Practice Session',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                subtitle:
+                    Text('4 days ago', style: TextStyle(color: Colors.grey)),
               ),
             ],
           ),

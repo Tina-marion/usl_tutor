@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,8 +32,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _nextPage() {
     if (_currentPage < OnboardingData.pages.length - 1) {
       _pageController.nextPage(
-        duration: 500.ms,
-        curve: Curves.easeInOutCubic,
+        duration: AppConstants.animationNormal,
+        curve: Curves.easeInOut,
       );
     } else {
       _completeOnboarding();
@@ -48,145 +47,115 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A2E),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // Skip Button
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: TextButton(
-                  onPressed: _skipOnboarding,
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(color: Colors.white70, fontSize: 17),
-                  ),
-                ),
-              ),
-            ),
-
-            // Main Content Area - FIXED with SingleChildScrollView
+            _buildTopBar(),
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: (index) => setState(() => _currentPage = index),
                 itemCount: OnboardingData.pages.length,
                 itemBuilder: (context, index) {
-                  return _buildPage(OnboardingData.pages[index], index);
+                  return _buildPage(OnboardingData.pages[index]);
                 },
               ),
             ),
-
-            // Glassmorphic Bottom Panel
-            Container(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-                border: Border.all(color: Colors.white.withOpacity(0.15)),
-              ),
-              child: Column(
-                children: [
-                  _buildPageIndicators(),
-                  const SizedBox(height: 32),
-                  _buildActionButton(),
-                ],
-              ),
-            ),
+            _buildBottomSection(),
           ],
         ),
       ),
     );
   }
 
-  // FIXED: Added SingleChildScrollView + better spacing
-  Widget _buildPage(OnboardingPage page, int index) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 20),
-
-            // Large Illustration
-            Container(
-              height: 230,                    // Reduced height to prevent overflow
-              width: 230,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
-              ),
-              child: Center(
-                child: Text(
-                  page.image,
-                  style: const TextStyle(fontSize: 110),   // Reduced emoji size
-                ),
-              ),
-            )
-                .animate()
-                .fadeIn(duration: 700.ms)
-                .scale(begin: const Offset(0.7, 0.7), curve: Curves.elasticOut),
-
-            const SizedBox(height: 40),
-
-            // Glassmorphic Title + Description Card
-            Container(
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppConstants.primaryColor.withOpacity(0.3),
-                    blurRadius: 30,
-                    offset: const Offset(0, 15),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                  child: Column(
-                    children: [
-                      Text(
-                        page.title,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          height: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        page.description,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white.withOpacity(0.85),
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-                .animate(delay: (150 * index).ms)
-                .fadeIn(duration: 700.ms)
-                .slideY(begin: 0.3, end: 0),
-
-            const SizedBox(height: 80), // Extra space at bottom
-          ],
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.all(AppConstants.paddingMedium),
+      child: Align(
+        alignment: Alignment.topRight,
+        child: TextButton(
+          onPressed: _skipOnboarding,
+          child: Text(
+            AppConstants.skipButton,
+            style: TextStyle(
+              color: AppConstants.textSecondary,
+              fontSize: AppConstants.fontSizeNormal,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPage(OnboardingPage page) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppConstants.paddingLarge),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildIllustration(page.image),
+          const SizedBox(height: AppConstants.paddingXL),
+          Text(
+            page.title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
+          const SizedBox(height: AppConstants.paddingMedium),
+          Text(
+            page.description,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppConstants.textSecondary,
+                  height: 1.5,
+                ),
+          )
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 200.ms)
+              .slideY(begin: 0.2, end: 0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIllustration(String emoji) {
+    return Container(
+      width: 200,
+      height: 200,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppConstants.primaryColor.withOpacity(0.1),
+            AppConstants.secondaryColor.withOpacity(0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Center(
+        child: Text(
+          emoji,
+          style: const TextStyle(fontSize: 100),
+        ),
+      ),
+    ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack);
+  }
+
+  Widget _buildBottomSection() {
+    return Padding(
+      padding: const EdgeInsets.all(AppConstants.paddingLarge),
+      child: Column(
+        children: [
+          _buildPageIndicators(),
+          const SizedBox(height: AppConstants.paddingXL),
+          _buildActionButton(),
+          const SizedBox(height: AppConstants.paddingMedium),
+        ],
       ),
     );
   }
@@ -197,13 +166,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       children: List.generate(
         OnboardingData.pages.length,
         (index) => AnimatedContainer(
-          duration: 300.ms,
-          margin: const EdgeInsets.symmetric(horizontal: 5),
-          width: _currentPage == index ? 34 : 10,
-          height: 10,
+          duration: AppConstants.animationNormal,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: _currentPage == index ? 32 : 8,
+          height: 8,
           decoration: BoxDecoration(
-            color: _currentPage == index ? Colors.white : Colors.white.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
+            color: _currentPage == index
+                ? AppConstants.primaryColor
+                : AppConstants.dividerColor,
+            borderRadius: BorderRadius.circular(4),
           ),
         ),
       ),
@@ -212,28 +183,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildActionButton() {
     final isLastPage = _currentPage == OnboardingData.pages.length - 1;
-
     return SizedBox(
       width: double.infinity,
-      height: 68,
+      height: 56,
       child: ElevatedButton(
         onPressed: _nextPage,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF0A0A2E),
+          backgroundColor: AppConstants.primaryColor,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(40),
+            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
           ),
-          elevation: 8,
+          elevation: 0,
         ),
-        child: Text(
-          isLastPage ? "Let's Start Learning! 🚀" : "Continue",
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              isLastPage
+                  ? AppConstants.getStartedButton
+                  : AppConstants.nextButton,
+              style: const TextStyle(
+                fontSize: AppConstants.fontSizeLarge,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (!isLastPage) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward, size: 20),
+            ],
+          ],
         ),
-      ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+      ),
     );
   }
 }

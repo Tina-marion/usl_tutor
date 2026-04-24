@@ -7,7 +7,6 @@ import 'package:video_player/video_player.dart';
 
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
-import '../services/inference_service.dart';
 import '../services/mock_data_service.dart';
 import '../services/progress_service.dart';
 
@@ -57,8 +56,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         border: Border.all(color: AppConstants.dividerColor),
       );
-      
-        get InferenceService => null;
+
+  get InferenceService => null;
 
   @override
   void initState() {

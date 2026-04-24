@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
@@ -41,18 +40,28 @@ class NativeOnnxService {
     try {
       final dynamic s = session as dynamic;
       if (s.inputShapes != null && s.inputShapes[inputName] != null) {
-        inputShape = (s.inputShapes[inputName] as List).map((e) => e as int).toList();
-      } else if (s.inputs != null && s.inputs[inputName] != null && s.inputs[inputName]['shape'] != null) {
-        inputShape = (s.inputs[inputName]['shape'] as List).map((e) => e as int).toList();
+        inputShape =
+            (s.inputShapes[inputName] as List).map((e) => e as int).toList();
+      } else if (s.inputs != null &&
+          s.inputs[inputName] != null &&
+          s.inputs[inputName]['shape'] != null) {
+        inputShape = (s.inputs[inputName]['shape'] as List)
+            .map((e) => e as int)
+            .toList();
       } else {
         // Fallback default: [batch, seqLen, height, width, channels]
         inputShape = [1, 16, 224, 224, 3];
       }
 
       if (s.outputShapes != null && s.outputShapes[outputName] != null) {
-        outputShape = (s.outputShapes[outputName] as List).map((e) => e as int).toList();
-      } else if (s.outputs != null && s.outputs[outputName] != null && s.outputs[outputName]['shape'] != null) {
-        outputShape = (s.outputs[outputName]['shape'] as List).map((e) => e as int).toList();
+        outputShape =
+            (s.outputShapes[outputName] as List).map((e) => e as int).toList();
+      } else if (s.outputs != null &&
+          s.outputs[outputName] != null &&
+          s.outputs[outputName]['shape'] != null) {
+        outputShape = (s.outputs[outputName]['shape'] as List)
+            .map((e) => e as int)
+            .toList();
       } else {
         // Fallback default: [batch, numClasses]
         outputShape = [1, 1000];
@@ -67,14 +76,15 @@ class NativeOnnxService {
       throw Exception('Unexpected model tensor shapes.');
     }
 
-    final sequenceLength = inputShape[1] as int;
-    final imageHeight = inputShape[2] as int;
-    final imageWidth = inputShape[3] as int;
-    final channels = inputShape[4] as int;
-    final numClasses = outputShape[1] as int;
+    final sequenceLength = inputShape[1];
+    final imageHeight = inputShape[2];
+    final imageWidth = inputShape[3];
+    final channels = inputShape[4];
+    final numClasses = outputShape[1];
 
     if (channels != 3) {
-      throw Exception('Model expects $channels channels; only RGB (3) is supported.');
+      throw Exception(
+          'Model expects $channels channels; only RGB (3) is supported.');
     }
 
     // Build the 5D input tensor (List of List ...)
@@ -94,7 +104,8 @@ class NativeOnnxService {
         .cast<double>();
 
     // Create OrtValue (float32)
-    final inputOrtValue = await OrtValue.fromList(flattenedInput, inputShape.cast<int>());
+    final inputOrtValue =
+        await OrtValue.fromList(flattenedInput, inputShape.cast<int>());
 
     // Run inference
     final inputs = {inputName: inputOrtValue};
@@ -130,7 +141,8 @@ class NativeOnnxService {
       final tempDir = await getTemporaryDirectory();
       final modelBytes = await rootBundle.load(_modelAssetPath);
       final modelFile = File('${tempDir.path}/usl_model_flex.onnx');
-      await modelFile.writeAsBytes(modelBytes.buffer.asUint8List(), flush: true);
+      await modelFile.writeAsBytes(modelBytes.buffer.asUint8List(),
+          flush: true);
 
       // Some runtimes expose a bytes-based session creation method instead of a path-based one.
       final bytes = await modelFile.readAsBytes();
@@ -144,7 +156,8 @@ class NativeOnnxService {
     // Load labels once
     final labelsJson = await rootBundle.loadString(_labelsAssetPath);
     final decoded = jsonDecode(labelsJson) as Map<String, dynamic>;
-    _labels = decoded.map((key, value) => MapEntry(int.parse(key), value.toString()));
+    _labels =
+        decoded.map((key, value) => MapEntry(int.parse(key), value.toString()));
   }
 
   // ==================== Frame processing (unchanged) ====================
@@ -184,7 +197,8 @@ class NativeOnnxService {
       final decoded = img.decodeImage(thumbnail);
       if (decoded == null) continue;
 
-      final resized = img.copyResize(decoded, width: imageWidth, height: imageHeight);
+      final resized =
+          img.copyResize(decoded, width: imageWidth, height: imageHeight);
 
       for (var y = 0; y < imageHeight; y++) {
         for (var x = 0; x < imageWidth; x++) {
@@ -206,7 +220,8 @@ class NativeOnnxService {
     return input;
   }
 
-  static Future<Uint8List?> _extractThumbnailBytes(String videoPath, int timeMs) async {
+  static Future<Uint8List?> _extractThumbnailBytes(
+      String videoPath, int timeMs) async {
     try {
       final bytes = await vt.VideoThumbnail.thumbnailData(
         video: videoPath,
@@ -244,6 +259,7 @@ extension on OnnxRuntime {
   Future<dynamic> createSessionFromBytes(Uint8List bytes) async {
     // Not all platforms/runtimes expose a bytes-based session creation.
     // Ensure the Future completes with an error rather than returning null.
-    throw UnimplementedError('createSessionFromBytes is not implemented on this platform.');
+    throw UnimplementedError(
+        'createSessionFromBytes is not implemented on this platform.');
   }
 }
