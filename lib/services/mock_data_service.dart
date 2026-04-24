@@ -208,6 +208,26 @@ class MockDataService {
       isLearned: false,
     ),
     const GestureModel(
+      id: 'n54',
+      name: 'Fifty Four',
+      category: 'Numbers',
+      description: 'Number 54',
+      difficulty: 'Medium',
+      videoUrl: 'assets/videos/54.mp4',
+      instructions: [
+        'Sign fifty first',
+        'Then sign four',
+        'Combine both clearly in sequence',
+      ],
+      tips: [
+        'Keep each number distinct',
+        'Use steady hand positioning',
+        'Pause briefly between the two signs',
+      ],
+      estimatedMinutes: 2,
+      isLearned: false,
+    ),
+    const GestureModel(
       id: 'letter1',
       name: 'A',
       category: 'Letters',
@@ -447,6 +467,46 @@ class MockDataService {
       estimatedMinutes: 2,
       isLearned: false,
     ),
+    const GestureModel(
+      id: 'phrase5',
+      name: 'And',
+      category: 'Common Phrases',
+      description: 'Connector word for joining ideas',
+      difficulty: 'Easy',
+      videoUrl: 'assets/videos/0066.mp4',
+      instructions: [
+        'Make the sign for and',
+        'Keep movement compact and clear',
+        'Use naturally between signs',
+      ],
+      tips: [
+        'Keep transitions smooth',
+        'Avoid exaggerated movement',
+        'Maintain consistent rhythm',
+      ],
+      estimatedMinutes: 1,
+      isLearned: false,
+    ),
+    const GestureModel(
+      id: 'phrase6',
+      name: 'Can',
+      category: 'Common Phrases',
+      description: 'Express ability or possibility',
+      difficulty: 'Easy',
+      videoUrl: 'assets/videos/can.mp4',
+      instructions: [
+        'Form both hands for the can sign',
+        'Bring the hands into position',
+        'Show a clear, controlled motion',
+      ],
+      tips: [
+        'Keep handshape consistent',
+        'Practice at a natural pace',
+        'Pair with facial expression for context',
+      ],
+      estimatedMinutes: 1,
+      isLearned: false,
+    ),
   ];
 
   static final List<Lesson> _lessons = [
@@ -476,9 +536,9 @@ class MockDataService {
       description: 'Basic number signs',
       icon: '🔢',
       imagePath: 'assets/dp.png',
-      totalSigns: 2,
+      totalSigns: 3,
       learnedSigns: 0,
-      gestureIds: ['n1', 'n2'],
+      gestureIds: ['n1', 'n2', 'n54'],
     ),
     const Lesson(
       id: 'l4',
@@ -506,9 +566,16 @@ class MockDataService {
       description: 'Frequently used expressions',
       icon: '💬',
       imagePath: 'assets/dp.png',
-      totalSigns: 4,
+      totalSigns: 6,
       learnedSigns: 0,
-      gestureIds: ['phrase1', 'phrase2', 'phrase3', 'phrase4'],
+      gestureIds: [
+        'phrase1',
+        'phrase2',
+        'phrase3',
+        'phrase4',
+        'phrase5',
+        'phrase6',
+      ],
     ),
   ];
 

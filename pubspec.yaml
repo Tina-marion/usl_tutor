@@ -59,9 +59,8 @@ flutter:
 
   # Assets
   assets:
-    - assets/images/
+    - assets/dp.png
     - assets/videos/
-    - assets/animations/
     - assets/models/
     - assets/data/
 
