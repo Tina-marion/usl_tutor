@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import '../constants/app_constants.dart';
 import '../models/lesson.dart';
 import '../services/mock_data_service.dart';
 import 'gesture_list_screen.dart';
@@ -81,13 +79,8 @@ class _LearningScreenState extends State<LearningScreen> {
       case 'common phrases': return 'Common Phrases';
       case 'colors': return 'Colors';
       case 'actions': return 'Actions';
-      default:
-        return key.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w).join(' ');
+      default: return key;
     }
-  }
-
-  void _onCategorySelected(String categoryKey) {
-    setState(() => _selectedCategory = categoryKey);
   }
 
   void _onLessonTap(Lesson lesson) {
@@ -114,19 +107,15 @@ class _LearningScreenState extends State<LearningScreen> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFFF8F9FA),
-      elevation: 0,
+      elevation: 4,
       centerTitle: true,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black87),
-        onPressed: () => Navigator.pop(context),
-      ),
       title: const Text(
         'Learn USL',
-        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 22),
+        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 20),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.search, color: Colors.black87),
+          icon: const Icon(Icons.search, color: Colors.black),
           onPressed: _showSearchDialog,
         ),
       ],
@@ -135,32 +124,36 @@ class _LearningScreenState extends State<LearningScreen> {
 
   Widget _buildCategoryFilters() {
     final categories = <String>['all', ..._availableCategoryKeys()];
+
     return SizedBox(
-      height: 54,
+      height: 50,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final key = categories[index];
           final isSelected = key == _selectedCategory;
-          return InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => _onCategorySelected(key),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+
+          return GestureDetector(
+            onTap: () => setState(() => _selectedCategory = key),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: isSelected ? Colors.green : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSelected ? Colors.green : Colors.grey.shade300),
+                gradient: isSelected 
+                    ? LinearGradient(colors: [Colors.green.shade700, Colors.green.shade300]) 
+                    : null,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: isSelected ? [BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(0, 2))] : [],
               ),
               child: Text(
                 _categoryLabel(key),
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black87,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.white : Colors.black,
                 ),
               ),
             ),
@@ -175,12 +168,7 @@ class _LearningScreenState extends State<LearningScreen> {
     for (final lesson in _lessons) {
       keys.add(_lessonCategoryKey(lesson));
     }
-    final sorted = keys.toList()
-      ..sort((a, b) {
-        final byPriority = _categoryPriority.indexOf(a).compareTo(_categoryPriority.indexOf(b));
-        return byPriority != 0 ? byPriority : _categoryLabel(a).compareTo(_categoryLabel(b));
-      });
-    return sorted;
+    return keys.toList();
   }
 
   Widget _buildLessonsGrid() {
@@ -190,215 +178,153 @@ class _LearningScreenState extends State<LearningScreen> {
 
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((l) =>
-          l.title.toLowerCase().contains(_searchQuery) ||
+      l.title.toLowerCase().contains(_searchQuery) ||
           l.description.toLowerCase().contains(_searchQuery)).toList();
     }
 
-    if (filtered.isEmpty) {
-      return const Center(
-        child: Text('No lessons found', style: TextStyle(color: Colors.grey, fontSize: 16)),
-      );
-    }
-
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+      padding: const EdgeInsets.all(12),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 1.08,
+        childAspectRatio: 0.85,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final lesson = filtered[index];
-        return _LessonGridCard(
+
+        return _LessonCard(
           lesson: lesson,
           onTap: () => _onLessonTap(lesson),
-        ).animate().fadeIn(duration: 400.ms, delay: (50 * index).ms)
-         .scale(begin: const Offset(0.92, 0.92));
+        ).animate().fadeIn(duration: 400.ms);
       },
     );
   }
 
-  // ===================== Enhanced Large & Colourful Lesson Card =====================
-  Widget _LessonGridCard({required Lesson lesson, required VoidCallback onTap}) {
+  Widget _LessonCard({required Lesson lesson, required VoidCallback onTap}) {
     final progress = lesson.progress.clamp(0.0, 1.0);
     final categoryColor = _getCategoryColor(_lessonCategoryKey(lesson));
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth * 0.25; // Adjusted size for better aesthetics
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        height: 200, // Fixed height for consistency
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           children: [
-            // Colorful Top Accent Bar (map-like feel)
             Container(
-              height: 8,
+              height: 6,
               decoration: BoxDecoration(
                 color: categoryColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(28),
-                  topRight: Radius.circular(28),
-                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
             ),
+            const SizedBox(height: 12),
 
-            const SizedBox(height: 24),
-
-            // Very Large & Colourful Icon
             Container(
-              width: 128,
-              height: 128,
+              width: iconSize,
+              height: iconSize,
               decoration: BoxDecoration(
                 color: categoryColor.withOpacity(0.15),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: categoryColor.withOpacity(0.3),
-                  width: 6,
-                ),
               ),
               child: Center(
                 child: Text(
                   lesson.icon,
-                  style: TextStyle(
-                    fontSize: 68,
-                    shadows: [
-                      Shadow(
-                        color: categoryColor.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(2, 2),
-                      ),
-                    ],
-                  ),
+                  style: const TextStyle(fontSize: 42),
                 ),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
 
-            // Title
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
                 lesson.title,
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                  height: 1.2,
-                ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            // Sign count
-            Text(
-              '${lesson.totalSigns} signs',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Progress Bar (only if started)
-            if (progress > 0) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation(categoryColor),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '${(progress * 100).round()}% complete',
-                style: TextStyle(
-                  fontSize: 13.5,
-                  color: categoryColor,
+                style: const TextStyle(
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ] else
-              const Text(
-                'Tap to start',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
+            ),
+
+            const SizedBox(height: 4),
+
+            Text(
+              '${lesson.totalSigns} signs',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            if (progress > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: AlwaysStoppedAnimation(categoryColor),
                 ),
+              )
+            else
+              const Text(
+                'Lets get started!',
+                style: TextStyle(fontSize: 12, color: Color.fromARGB(255, 255, 107, 39)),
               ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
           ],
         ),
       ),
     );
   }
 
-  // Helper: Assign vibrant colors per category
   Color _getCategoryColor(String categoryKey) {
     switch (categoryKey) {
-      case 'alphabets': return Colors.blue.shade600;
-      case 'numbers':   return Colors.orange.shade600;
-      case 'greetings': return Colors.green.shade600;
-      case 'family':    return Colors.purple.shade600;
-      case 'food':      return const Color(0xFFFF6D00); // Vibrant orange
-      case 'common phrases': return Colors.teal.shade600;
-      case 'colors':    return Colors.pink.shade600;
-      case 'actions':   return Colors.indigo.shade600;
-      default:          return Colors.green.shade600;
+      case 'alphabets': return Colors.blue;
+      case 'numbers': return Colors.orange;
+      case 'greetings': return Colors.green;
+      case 'family': return Colors.purple;
+      case 'food': return Colors.deepOrange;
+      case 'common phrases': return Colors.teal;
+      case 'colors': return Colors.pink;
+      case 'actions': return Colors.indigo;
+      default: return Colors.green;
     }
   }
 
   void _showSearchDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('Search Lessons'),
         content: TextField(
           controller: _searchController,
-          autofocus: true,
           decoration: const InputDecoration(
             hintText: 'Enter lesson name...',
-            prefixIcon: Icon(Icons.search),
           ),
-          onSubmitted: (_) => Navigator.pop(context),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _searchController.clear();
-              Navigator.pop(context);
-            },
-            child: const Text('Clear'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Search'),
-          ),
-        ],
       ),
     );
   }
