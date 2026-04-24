@@ -12,7 +12,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String userName = 'Joy';
+  String userName = 'Buddy';
   int signsLearnedThisWeek = 12;
   int currentStreak = 7;
   String greeting = 'Hello';
@@ -106,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            IconButton(icon: const Icon(Icons.school_rounded, color: Colors.blue, size: 28), onPressed: () => Navigator.pushNamed(context, '/learning')),
-            IconButton(icon: const Icon(Icons.videocam_rounded, color: Colors.green, size: 28), onPressed: () => Navigator.pushNamed(context, '/practice')),
-            IconButton(icon: const Icon(Icons.person_rounded, color: Colors.orange, size: 28), onPressed: () => Navigator.pushNamed(context, '/profile')),
+            IconButton(icon: const Icon(Icons.school_rounded, color: Color.fromARGB(255, 43, 14, 41), size: 28), onPressed: () => Navigator.pushNamed(context, '/learning')),
+            IconButton(icon: const Icon(Icons.videocam_rounded, color: Color.fromARGB(255, 43, 14, 41), size: 28), onPressed: () => Navigator.pushNamed(context, '/practice')),
+            IconButton(icon: const Icon(Icons.person_rounded, color: Color.fromARGB(255, 43, 14, 41), size: 28), onPressed: () => Navigator.pushNamed(context, '/profile')),
           ],
         ),
       ),
