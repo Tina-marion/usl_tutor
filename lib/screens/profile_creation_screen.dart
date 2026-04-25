@@ -69,7 +69,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -86,7 +86,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                   color: AppConstants.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person_add,
                   size: 40,
                   color: AppConstants.primaryColor,
@@ -94,12 +94,12 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
               ),
               const SizedBox(height: 32),
               // Title
-              const Text(
+              Text(
                 'Create Your Profile',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: AppConstants.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -109,7 +109,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                 'Let\'s personalize your learning experience',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppConstants.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -124,7 +124,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                       controller: _nameController,
                       decoration: InputDecoration(
                         hintText: 'Your Name',
-                        prefixIcon: const Icon(Icons.person),
+                        prefixIcon: Icon(Icons.person),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
@@ -167,7 +167,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: 'Email (Optional)',
-                        prefixIcon: const Icon(Icons.email),
+                        prefixIcon: Icon(Icons.email),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
@@ -228,7 +228,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                                   ),
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'Create Profile',
                                 style: TextStyle(
                                   fontSize: 16,
@@ -249,3 +249,4 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
     );
   }
 }
+

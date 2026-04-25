@@ -17,7 +17,7 @@ class AchievementBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: unlocked
             ? AppConstants.accentColor.withOpacity(0.1)
-            : AppConstants.backgroundColor,
+            : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         border: Border.all(
           color: unlocked
@@ -32,7 +32,10 @@ class AchievementBadge extends StatelessWidget {
             achievement.icon,
             style: TextStyle(
               fontSize: 32,
-              color: Colors.black.withOpacity(unlocked ? 1.0 : 0.35),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: unlocked ? 1.0 : 0.35),
             ),
           ),
           const SizedBox(height: 8),
@@ -43,8 +46,8 @@ class AchievementBadge extends StatelessWidget {
               fontSize: AppConstants.fontSizeSmall,
               fontWeight: FontWeight.w600,
               color: unlocked
-                  ? AppConstants.textPrimary
-                  : AppConstants.textSecondary,
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

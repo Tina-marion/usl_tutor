@@ -21,7 +21,7 @@ class GestureCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppConstants.paddingMedium),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
           border: gesture.isLocked
               ? Border.all(color: AppConstants.dividerColor, width: 1)
@@ -30,7 +30,10 @@ class GestureCard extends StatelessWidget {
               ? null
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.12),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -53,8 +56,8 @@ class GestureCard extends StatelessWidget {
                             fontSize: AppConstants.fontSizeLarge,
                             fontWeight: FontWeight.bold,
                             color: gesture.isLocked
-                                ? AppConstants.textSecondary
-                                : AppConstants.textPrimary,
+                                ? Theme.of(context).colorScheme.onSurfaceVariant
+                                : Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -74,9 +77,9 @@ class GestureCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${gesture.estimatedMinutes} min',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: AppConstants.fontSizeSmall,
-                          color: AppConstants.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -118,7 +121,7 @@ class GestureCard extends StatelessWidget {
           gesture.isLocked ? Icons.lock : Icons.sign_language,
           size: 40,
           color: gesture.isLocked
-              ? AppConstants.textSecondary
+              ? Colors.grey.shade400
               : AppConstants.primaryColor,
         ),
       ),

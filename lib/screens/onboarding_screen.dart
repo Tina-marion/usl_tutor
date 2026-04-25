@@ -47,7 +47,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Text(
             AppConstants.skipButton,
             style: TextStyle(
-              color: AppConstants.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: AppConstants.fontSizeNormal,
               fontWeight: FontWeight.w600,
             ),
@@ -110,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             page.description,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppConstants.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.5,
                 ),
           )
@@ -140,7 +140,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Center(
         child: Text(
           emoji,
-          style: const TextStyle(fontSize: 100),
+          style: TextStyle(fontSize: 100),
         ),
       ),
     ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack);
@@ -203,14 +203,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               isLastPage
                   ? AppConstants.getStartedButton
                   : AppConstants.nextButton,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: AppConstants.fontSizeLarge,
                 fontWeight: FontWeight.w600,
               ),
             ),
             if (!isLastPage) ...[
               const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward, size: 20),
+              Icon(Icons.arrow_forward, size: 20),
             ],
           ],
         ),
@@ -218,3 +218,4 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 }
+

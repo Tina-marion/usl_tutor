@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart' as vp;
+
+import '../constants/app_constants.dart';
 import '../models/quiz.dart';
 import '../services/quiz_service.dart';
 import 'quiz_results_screen.dart';
@@ -107,7 +109,7 @@ class _QuizScreenState extends State<QuizScreen> {
     final question = _questions[_currentQuestionIndex];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F1FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -144,14 +146,15 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        const Text(
+        Text(
           "Quiz Time 🎯",
           style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
         Text(
           "Question ${_currentQuestionIndex + 1}/${_questions.length}",
-          style: const TextStyle(color: Colors.grey),
+          style:
+              TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
     );
@@ -162,7 +165,7 @@ class _QuizScreenState extends State<QuizScreen> {
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: ClipRRect(
@@ -180,10 +183,10 @@ class _QuizScreenState extends State<QuizScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: const Text(
+      child: Text(
         "What sign is being performed?",
         textAlign: TextAlign.center,
         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -199,20 +202,20 @@ class _QuizScreenState extends State<QuizScreen> {
         final isSelected = _selectedAnswerIndex == index;
         final isCorrect = index == question.correctAnswerIndex;
 
-        Color border = Colors.grey.shade300;
-        Color bg = Colors.white;
+        Color border = Theme.of(context).dividerColor;
+        Color bg = Theme.of(context).cardColor;
 
         if (_hasAnswered) {
           if (isCorrect) {
             border = Colors.green;
-            bg = Colors.green.shade50;
+            bg = Colors.green.withValues(alpha: 0.18);
           } else if (isSelected) {
             border = Colors.red;
-            bg = Colors.red.shade50;
+            bg = Colors.red.withValues(alpha: 0.16);
           }
         } else if (isSelected) {
           border = Colors.purple;
-          bg = Colors.purple.shade50;
+          bg = Colors.purple.withValues(alpha: 0.16);
         }
 
         return GestureDetector(
@@ -231,20 +234,23 @@ class _QuizScreenState extends State<QuizScreen> {
                   backgroundColor: border,
                   child: Text(
                     String.fromCharCode(65 + index),
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     option,
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
                 if (_hasAnswered && isCorrect)
-                  const Icon(Icons.check_circle, color: Colors.green),
+                  Icon(Icons.check_circle, color: Colors.green),
                 if (_hasAnswered && isSelected && !isCorrect)
-                  const Icon(Icons.cancel, color: Colors.red),
+                  Icon(Icons.cancel, color: Colors.red),
               ],
             ),
           ),
@@ -258,7 +264,7 @@ class _QuizScreenState extends State<QuizScreen> {
     return ElevatedButton(
       onPressed: _hasAnswered ? _nextQuestion : _submitAnswer,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.purple,
+        backgroundColor: AppConstants.primaryColor,
         minimumSize: const Size(double.infinity, 55),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
@@ -324,14 +330,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Exit Quiz?'),
-        content: const Text(
+        title: Text('Exit Quiz?'),
+        content: Text(
           'Your progress will be lost. Are you sure you want to exit?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -341,7 +347,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('Exit'),
+            child: Text('Exit'),
           ),
         ],
       ),

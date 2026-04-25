@@ -30,14 +30,15 @@ class _SplashScreenState extends State<SplashScreen> {
     if (user.name == 'USL Learner') {
       Navigator.pushReplacementNamed(context, '/profile-creation');
     } else {
-      Navigator.pushReplacementNamed(context, '/onboarding'); // or '/home' if you prefer
+      Navigator.pushReplacementNamed(
+          context, '/onboarding'); // or '/home' if you prefer
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Clean light background like HomeScreen
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -50,10 +51,13 @@ class _SplashScreenState extends State<SplashScreen> {
             // App Name
             Text(
               AppConstants.appName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 48,
                 fontWeight: FontWeight.w900,
-                color: Colors.black87,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.87),
                 letterSpacing: -1,
               ),
             )
@@ -92,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen> {
       width: 180,
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
@@ -134,12 +138,10 @@ class _SplashScreenState extends State<SplashScreen> {
         )
             .animate(onPlay: (controller) => controller.repeat())
             .rotate(duration: 1800.ms),
-
         const SizedBox(height: 24),
-
         Text(
           AppConstants.loadingMessage,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             color: Colors.grey,
             fontWeight: FontWeight.w500,

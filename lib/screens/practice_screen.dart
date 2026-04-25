@@ -301,7 +301,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   : AppConstants.accentColor,
             ),
             const SizedBox(width: 8),
-            const Text('Practice Complete!'),
+            Text('Practice Complete!'),
           ],
         ),
         content: Column(
@@ -311,7 +311,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
             if (_activeGesture != null) ...[
               Text(
                 'Expected: $gestureExpected',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -319,7 +319,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               const SizedBox(height: 12),
             ],
             if (hasTranslation) ...[
-              const Text(
+              Text(
                 'You signed:',
                 style: TextStyle(
                   fontSize: 14,
@@ -335,7 +335,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ),
                 child: Text(
                   _translation!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                     color: AppConstants.primaryColor,
@@ -376,21 +376,21 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         ],
                       ),
             ] else ...[
-              const Text(
+              Text(
                 'Could not detect sign. Please try again with:',
                 style: TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 8),
-              const Text('• Better lighting'),
-              const Text('• Clear hand movements'),
-              const Text('• Proper camera position'),
+              Text('• Better lighting'),
+              Text('• Clear hand movements'),
+              Text('• Proper camera position'),
             ],
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Practice Again'),
+            child: Text('Practice Again'),
           ),
           if (_activeGesture != null && hasTranslation)
             ElevatedButton(
@@ -406,7 +406,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppConstants.primaryColor,
               ),
-              child: const Text('Mark as Learned'),
+              child: Text('Mark as Learned'),
             ),
         ],
       ),
@@ -427,18 +427,19 @@ class _PracticeScreenState extends State<PracticeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Hey!!! Ready to practice some USL?',
               style: TextStyle(
-                color: AppConstants.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: AppConstants.fontSizeLarge,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Choose what to practice..',
-              style: TextStyle(color: AppConstants.textSecondary),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
             Row(
@@ -446,8 +447,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _selectMode(PracticeMode.alphabets),
-                    icon: const Icon(Icons.sort_by_alpha),
-                    label: const Text('Alphabets'),
+                    icon: Icon(Icons.sort_by_alpha),
+                    label: Text('Alphabets'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppConstants.primaryColor,
                       side: const BorderSide(color: AppConstants.dividerColor),
@@ -458,8 +459,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _selectMode(PracticeMode.numbers),
-                    icon: const Icon(Icons.pin),
-                    label: const Text('Numbers'),
+                    icon: Icon(Icons.pin),
+                    label: Text('Numbers'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppConstants.primaryColor,
                       side: const BorderSide(color: AppConstants.dividerColor),
@@ -483,8 +484,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
         children: [
           Text(
             'Mode: $_selectedModeLabel',
-            style: const TextStyle(
-              color: AppConstants.textPrimary,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -495,8 +496,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
             children: [
               OutlinedButton.icon(
                 onPressed: _changeMode,
-                icon: const Icon(Icons.swap_horiz, size: 18),
-                label: const Text('Change Mode'),
+                icon: Icon(Icons.swap_horiz, size: 18),
+                label: Text('Change Mode'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppConstants.primaryColor,
                   side: const BorderSide(color: AppConstants.dividerColor),
@@ -505,8 +506,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
               if (_practiceGestures.isNotEmpty)
                 OutlinedButton.icon(
                   onPressed: _showNextGesture,
-                  icon: const Icon(Icons.skip_next, size: 18),
-                  label: const Text('Next Video'),
+                  icon: Icon(Icons.skip_next, size: 18),
+                  label: Text('Next Video'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppConstants.primaryColor,
                     side: const BorderSide(color: AppConstants.dividerColor),
@@ -526,10 +527,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
         _isCameraInitialized && !_isUploading && _activeGesture != null;
 
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        foregroundColor: AppConstants.textPrimary,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: Text(
           _activeGesture != null
@@ -551,8 +552,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   Expanded(
                     child: Text(
                       'Current: ${_activeGesture!.name}',
-                      style: const TextStyle(
-                        color: AppConstants.textPrimary,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -560,8 +561,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   if (_isModePractice && _practiceGestures.isNotEmpty)
                     Text(
                       '${_currentGestureIndex + 1}/${_practiceGestures.length}',
-                      style: const TextStyle(
-                        color: AppConstants.textSecondary,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -603,8 +604,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   _feedback ?? 'Initializing camera...',
-                                  style: const TextStyle(
-                                      color: AppConstants.textSecondary),
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant),
                                 ),
                               ],
                             ),
@@ -612,11 +615,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
                         if (_countdown > 0)
                           Container(
-                            color: Colors.black54,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.54),
                             child: Center(
                               child: Text(
                                 _countdown.toString(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 100,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -640,7 +646,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                 ),
                                 borderRadius: BorderRadius.circular(
                                     AppConstants.radiusSmall),
-                                color: Colors.black,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(
@@ -671,7 +677,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
+                                Text(
                                   'Recording...',
                                   style: TextStyle(
                                     color: Colors.white,
@@ -693,13 +699,16 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               padding: const EdgeInsets.all(
                                   AppConstants.paddingMedium),
                               decoration: BoxDecoration(
-                                color: Colors.black87,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.87),
                                 borderRadius: BorderRadius.circular(
                                     AppConstants.radiusMedium),
                               ),
                               child: Text(
                                 _activeGesture!.instructions.first,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: AppConstants.fontSizeSmall,
                                 ),
@@ -713,11 +722,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         margin: const EdgeInsets.symmetric(horizontal: 16),
                         padding: const EdgeInsets.all(16),
                         decoration: _panelDecoration,
-                        child: const Text(
+                        child: Text(
                           'Select a practice mode above to activate the camera.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: AppConstants.textSecondary,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: AppConstants.fontSizeNormal,
                           ),
                         ),
@@ -747,7 +757,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ),
                       child: Text(
                         _feedback!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppConstants.accentColor,
                           fontWeight: FontWeight.w600,
                         ),
@@ -755,7 +765,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ),
                     ),
                   if (_isUploading)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(bottom: 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -768,7 +778,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           SizedBox(width: 10),
                           Text(
                             'Processing...',
-                            style: TextStyle(color: AppConstants.textSecondary),
+                            style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant),
                           ),
                         ],
                       ),

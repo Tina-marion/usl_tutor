@@ -20,9 +20,9 @@ class QuizResultsScreen extends StatelessWidget {
     final percent = result.percentage.round();
 
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Quiz Results'),
+        title: Text('Quiz Results'),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -30,9 +30,9 @@ class QuizResultsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSummaryCard(percent),
+            _buildSummaryCard(context, percent),
             const SizedBox(height: AppConstants.paddingLarge),
-            _buildCategoryBreakdown(),
+            _buildCategoryBreakdown(context),
             const SizedBox(height: AppConstants.paddingLarge),
             _buildActions(context),
           ],
@@ -41,15 +41,15 @@ class QuizResultsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryCard(int percent) {
+  Widget _buildSummaryCard(BuildContext context, int percent) {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -70,7 +70,7 @@ class QuizResultsScreen extends StatelessWidget {
           const SizedBox(height: AppConstants.paddingMedium),
           Text(
             '${result.emoji}  Grade: ${result.grade}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: AppConstants.fontSizeLarge,
               fontWeight: FontWeight.w600,
             ),
@@ -81,16 +81,17 @@ class QuizResultsScreen extends StatelessWidget {
             children: [
               Text(
                 '${result.correctAnswers}/${result.totalQuestions}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: AppConstants.fontSizeXL,
                   fontWeight: FontWeight.bold,
-                  color: AppConstants.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'correct',
-                style: TextStyle(color: AppConstants.textSecondary),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -109,14 +110,15 @@ class QuizResultsScreen extends StatelessWidget {
           const SizedBox(height: AppConstants.paddingMedium),
           Text(
             'Time: ${_formatDuration(result.timeTaken)}',
-            style: const TextStyle(color: AppConstants.textSecondary),
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryBreakdown() {
+  Widget _buildCategoryBreakdown(BuildContext context) {
     if (result.categoryScores.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -124,13 +126,13 @@ class QuizResultsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Category Breakdown',
             style: TextStyle(
               fontSize: AppConstants.fontSizeLarge,
@@ -148,17 +150,17 @@ class QuizResultsScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       category,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: AppConstants.fontSizeNormal,
-                        color: AppConstants.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),
                   Text(
                     '$count',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: AppConstants.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -179,7 +181,7 @@ class QuizResultsScreen extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: const Text('Back'),
+            child: Text('Back'),
           ),
         ),
         const SizedBox(width: 12),
@@ -191,7 +193,7 @@ class QuizResultsScreen extends StatelessWidget {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: const Text('Retry'),
+            child: Text('Retry'),
           ),
         ),
       ],

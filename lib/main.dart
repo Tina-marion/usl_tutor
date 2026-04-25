@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import 'constants/app_theme.dart';
+import 'services/theme_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/learning_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -11,8 +13,11 @@ import 'screens/splash_screen.dart';
 import 'screens/practice_screen.dart';
 import 'screens/quiz_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final themeService = ThemeService();
+  await themeService.init();
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -22,11 +27,15 @@ void main() {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
     ),
   );
 
-  runApp(const USLTutorApp());
+  runApp(
+    ChangeNotifierProvider<ThemeService>.value(
+      value: themeService,
+      child: const USLTutorApp(),
+    ),
+  );
 }
 
 class USLTutorApp extends StatelessWidget {
@@ -34,24 +43,30 @@ class USLTutorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'USL Tutor',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
-      routes: {
-        '/splash': (context) => const SplashScreen(),
-        '/profile-creation': (context) => const ProfileCreationScreen(),
-        '/onboarding': (context) => const OnboardingScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/learning': (context) => const LearningScreen(),
-        '/practice': (context) => const PracticeScreen(),
-        '/quiz': (context) => const QuizScreen(),
-        '/profile': (context) => const ProfileScreen(),
+    return Consumer<ThemeService>(
+      builder: (context, themeService, child) {
+        return MaterialApp(
+          title: 'USL Tutor',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeService.themeMode,
+          home: const SplashScreen(),
+          routes: {
+            '/splash': (context) => const SplashScreen(),
+            '/profile-creation': (context) => const ProfileCreationScreen(),
+            '/onboarding': (context) => const OnboardingScreen(),
+            '/home': (context) => const HomeScreen(),
+            '/learning': (context) => const LearningScreen(),
+            '/practice': (context) => const PracticeScreen(),
+            '/quiz': (context) => const QuizScreen(),
+            '/profile': (context) => const ProfileScreen(),
+          },
+          onUnknownRoute: (settings) => MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+        );
       },
-      onUnknownRoute: (settings) => MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
-      ),
     );
   }
 }

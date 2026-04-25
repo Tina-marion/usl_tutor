@@ -161,7 +161,7 @@ class RecognitionFeedbackDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
       decoration: BoxDecoration(
-        color: AppConstants.backgroundColor,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
       ),
       child: Row(

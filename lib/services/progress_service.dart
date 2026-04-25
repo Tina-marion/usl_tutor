@@ -141,6 +141,87 @@ class ProgressService {
     return dateStr != null ? DateTime.parse(dateStr) : null;
   }
 
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  List<DateTime> _getUniqueActivityDatesDesc() {
+    final uniqueDates = <DateTime>{};
+    for (final activity in getActivities()) {
+      final timestamp = activity['timestamp'];
+      if (timestamp is DateTime) {
+        uniqueDates.add(_dateOnly(timestamp));
+      }
+    }
+
+    final dates = uniqueDates.toList()..sort((a, b) => b.compareTo(a));
+    return dates;
+  }
+
+  int _calculateCurrentStreak(List<DateTime> datesDesc) {
+    if (datesDesc.isEmpty) return 0;
+
+    final today = _dateOnly(DateTime.now());
+    final mostRecent = datesDesc.first;
+    final diffFromToday = today.difference(mostRecent).inDays;
+
+    if (diffFromToday > 1) return 0;
+
+    int streak = 1;
+    DateTime previous = mostRecent;
+
+    for (int i = 1; i < datesDesc.length; i++) {
+      final date = datesDesc[i];
+      if (previous.difference(date).inDays == 1) {
+        streak++;
+        previous = date;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  int _calculateLongestStreak(List<DateTime> datesDesc) {
+    if (datesDesc.isEmpty) return 0;
+
+    final datesAsc = List<DateTime>.from(datesDesc)..sort();
+    int longest = 1;
+    int current = 1;
+
+    for (int i = 1; i < datesAsc.length; i++) {
+      if (datesAsc[i].difference(datesAsc[i - 1]).inDays == 1) {
+        current++;
+      } else {
+        current = 1;
+      }
+      if (current > longest) longest = current;
+    }
+
+    return longest;
+  }
+
+  Future<Map<String, dynamic>> recalculateStreakFromActivities() async {
+    final datesDesc = _getUniqueActivityDatesDesc();
+    final currentStreak = _calculateCurrentStreak(datesDesc);
+    final longestStreak = _calculateLongestStreak(datesDesc);
+    final lastActiveDate = datesDesc.isNotEmpty ? datesDesc.first : null;
+
+    await _prefs.setInt(_dailyStreakKey, currentStreak);
+    if (lastActiveDate != null) {
+      await _prefs.setString(
+          _lastPracticeDateKey, lastActiveDate.toIso8601String());
+    } else {
+      await _prefs.remove(_lastPracticeDateKey);
+    }
+
+    return {
+      'currentStreak': currentStreak,
+      'longestStreak': longestStreak,
+      'lastActiveDate': lastActiveDate,
+    };
+  }
+
   // Quiz Scores
   Future<void> saveQuizScore(String lessonId, int score) async {
     final scores = getQuizScores();
@@ -306,19 +387,19 @@ class ProgressService {
     final activities = getActivities();
     final now = DateTime.now();
     final weekAgo = now.subtract(const Duration(days: 7));
-    
+
     // Initialize with 0 for each day (Mon-Sun)
     final dailyProgress = <int>[0, 0, 0, 0, 0, 0, 0];
-    
+
     // Count learning activities per day
     for (final activity in activities) {
       final timestamp = activity['timestamp'] as DateTime;
-      
+
       // Only count activities from the last 7 days
       if (timestamp.isAfter(weekAgo) && timestamp.isBefore(now)) {
         // Get day of week (0 = Monday, 6 = Sunday)
         final dayOfWeek = timestamp.weekday - 1;
-        
+
         // Count learned, mastered, and practiced activities
         final type = activity['type'] as String;
         if (type == 'learned' || type == 'mastered' || type == 'practiced') {
@@ -326,7 +407,7 @@ class ProgressService {
         }
       }
     }
-    
+
     return dailyProgress;
   }
 }

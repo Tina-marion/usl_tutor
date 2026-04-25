@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/progress_service.dart';
+import '../services/user_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,7 +12,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String userName = 'Buddy';
+  String userName = 'Learner';
   int signsLearnedThisWeek = 12;
   int currentStreak = 7;
   String greeting = 'Hello';
@@ -19,19 +20,46 @@ class _HomeScreenState extends State<HomeScreen> {
   double dailyChallengeProgress = 0.65;
 
   final ProgressService _progressService = ProgressService();
-  bool _isLoading = false;
+  final UserService _userService = UserService();
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHomeData();
+  }
+
+  Future<void> _loadHomeData() async {
+    await _progressService.init();
+    await _userService.init();
+    final streakData = await _progressService.recalculateStreakFromActivities();
+    await _userService.updateStreakData(
+      currentStreak: streakData['currentStreak'] as int,
+      longestStreak: streakData['longestStreak'] as int,
+      lastActiveDate: streakData['lastActiveDate'] as DateTime?,
+    );
+    final userProfile = _userService.getUserProfile();
+    final profileName = userProfile.name.trim();
+
+    if (!mounted) return;
+
+    setState(() {
+      userName = profileName.isEmpty ? 'Learner' : profileName;
+      currentStreak = userProfile.currentStreak;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : RefreshIndicator(
               onRefresh: () async {
-                await _progressService.init();
-                setState(() {});
+                await _loadHomeData();
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -64,8 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: _buildBottomNavigationBar(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.pushNamed(context, '/practice'),
-        icon: const Icon(Icons.videocam_rounded, size: 28),
-        label: const Text('Start Video Practice',
+        icon: Icon(Icons.videocam_rounded, size: 28),
+        label: Text('Start Video Practice',
             style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green,
         elevation: 8,
@@ -77,17 +105,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      title: const Text(
+      title: Text(
         'USL Tutor',
         style: TextStyle(
           fontWeight: FontWeight.w800,
-          color: Colors.black87,
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.87),
           fontSize: 24,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_none, color: Colors.black87),
+          icon: Icon(Icons.notifications_none,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.87)),
           onPressed: () {},
         ),
       ],
@@ -96,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBottomNavigationBar() {
     return BottomAppBar(
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       elevation: 12,
       shape: const AutomaticNotchedShape(
         RoundedRectangleBorder(
@@ -108,15 +141,15 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             IconButton(
-                icon: const Icon(Icons.school_rounded,
+                icon: Icon(Icons.school_rounded,
                     color: Color.fromARGB(255, 43, 14, 41), size: 28),
                 onPressed: () => Navigator.pushNamed(context, '/learning')),
             IconButton(
-                icon: const Icon(Icons.videocam_rounded,
+                icon: Icon(Icons.videocam_rounded,
                     color: Color.fromARGB(255, 43, 14, 41), size: 28),
                 onPressed: () => Navigator.pushNamed(context, '/practice')),
             IconButton(
-                icon: const Icon(Icons.person_rounded,
+                icon: Icon(Icons.person_rounded,
                     color: Color.fromARGB(255, 43, 14, 41), size: 28),
                 onPressed: () => Navigator.pushNamed(context, '/profile')),
           ],
@@ -151,10 +184,13 @@ class _WelcomeSection extends StatelessWidget {
             Expanded(
               child: Text(
                 '$greeting, $userName!',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w900,
-                  color: Colors.black87,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.87),
                   height: 1.1,
                 ),
               ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2),
@@ -168,12 +204,12 @@ class _WelcomeSection extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.local_fire_department,
+                  Icon(Icons.local_fire_department,
                       color: Colors.orange, size: 22),
                   const SizedBox(width: 6),
                   Text(
                     '$streak day streak',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.orange,
                       fontSize: 15,
@@ -187,10 +223,10 @@ class _WelcomeSection extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           "You've learned $signsLearned signs this week! 🔥",
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.w600,
-            color: Color.fromARGB(255, 99, 51, 109),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -208,30 +244,33 @@ class _StreakCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.07),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
               blurRadius: 20,
               offset: const Offset(0, 8)),
         ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.whatshot_rounded, color: Colors.orange, size: 42),
+          Icon(Icons.whatshot_rounded, color: Colors.orange, size: 42),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "You're on a roll!",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   '$streak day learning streak',
-                  style: const TextStyle(fontSize: 15, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -242,7 +281,7 @@ class _StreakCard extends StatelessWidget {
               color: Colors.orange,
               borderRadius: BorderRadius.circular(30),
             ),
-            child: const Text(
+            child: Text(
               'Keep it up!',
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -266,11 +305,11 @@ class _DailyChallengeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
               blurRadius: 20,
               offset: const Offset(0, 10)),
         ],
@@ -280,16 +319,19 @@ class _DailyChallengeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.emoji_events_rounded,
+              Icon(Icons.emoji_events_rounded,
                   color: Color.fromARGB(255, 243, 210, 25), size: 38),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Daily Challenge',
                   style: TextStyle(
                       fontSize: 23,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.87)),
                 ),
               ),
             ],
@@ -297,10 +339,13 @@ class _DailyChallengeCard extends StatelessWidget {
           const SizedBox(height: 18),
           Text(
             'Master "$dailyChallenge" today!',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.87)),
           ),
           const SizedBox(height: 22),
           ClipRRect(
@@ -308,7 +353,7 @@ class _DailyChallengeCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 14,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: Theme.of(context).dividerColor,
               valueColor: const AlwaysStoppedAnimation(
                   Color.fromARGB(255, 248, 110, 17)),
             ),
@@ -318,10 +363,11 @@ class _DailyChallengeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text("${(progress * 100).toInt()}% completed",
-                  style: const TextStyle(color: Colors.grey)),
-              const Text("Keep going!",
                   style: TextStyle(
-                      color: Color.fromARGB(255, 44, 23, 71),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              Text("Keep going!",
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600)),
             ],
           ),
@@ -338,7 +384,7 @@ class _DailyChallengeCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(22)),
                 elevation: 3,
               ),
-              child: const Text('Start Challenge →',
+              child: Text('Start Challenge →',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
             ),
           ),
@@ -356,10 +402,15 @@ class _QuickActionsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Quick Actions',
           style: TextStyle(
-              fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.87)),
         ),
         const SizedBox(
           height: 20,
@@ -424,11 +475,12 @@ class _SimpleActionCard extends StatelessWidget {
       child: Container(
         height: 158,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color:
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
                 blurRadius: 16,
                 offset: const Offset(0, 8)),
           ],
@@ -440,10 +492,13 @@ class _SimpleActionCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Colors.black87),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.87)),
             ),
           ],
         ),
@@ -465,20 +520,26 @@ class _RecentActivitySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Recent Activity',
           style: TextStyle(
-              fontSize: 23, fontWeight: FontWeight.bold, color: Colors.black87),
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.87)),
         ),
         const SizedBox(height: 14),
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.07),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
                   blurRadius: 18,
                   offset: const Offset(0, 8)),
             ],

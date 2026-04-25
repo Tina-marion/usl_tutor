@@ -79,9 +79,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text('Edit Profile'),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -100,7 +100,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     color: AppConstants.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.person,
                     size: 40,
                     color: AppConstants.primaryColor,
@@ -120,7 +120,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: 'Enter your name',
-                  prefixIcon: const Icon(Icons.person),
+                  prefixIcon: Icon(Icons.person),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
@@ -169,7 +169,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Enter your email',
-                  prefixIcon: const Icon(Icons.email),
+                  prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
@@ -229,7 +229,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                           ),
                         )
-                      : const Text(
+                      : Text(
                           'Save Changes',
                           style: TextStyle(
                             fontSize: 16,
@@ -251,12 +251,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Cancel',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppConstants.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -268,3 +268,4 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
+

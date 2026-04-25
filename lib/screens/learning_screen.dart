@@ -13,8 +13,14 @@ class LearningScreen extends StatefulWidget {
 
 class _LearningScreenState extends State<LearningScreen> {
   static const List<String> _categoryPriority = [
-    'alphabets', 'numbers', 'greetings', 'family', 'food',
-    'common phrases', 'colors', 'actions',
+    'alphabets',
+    'numbers',
+    'greetings',
+    'family',
+    'food',
+    'common phrases',
+    'colors',
+    'actions',
   ];
 
   String _selectedCategory = 'all';
@@ -52,7 +58,8 @@ class _LearningScreenState extends State<LearningScreen> {
 
   String _normalizeCategory(String category) {
     final value = category.trim().toLowerCase();
-    if (['letters', 'alphabet', 'alphabets'].contains(value)) return 'alphabets';
+    if (['letters', 'alphabet', 'alphabets'].contains(value))
+      return 'alphabets';
     return value;
   }
 
@@ -62,7 +69,8 @@ class _LearningScreenState extends State<LearningScreen> {
       if (first != null) return _normalizeCategory(first.category);
     }
     final text = '${lesson.title} ${lesson.description}'.toLowerCase();
-    if (text.contains('letter') || text.contains('alphabet')) return 'alphabets';
+    if (text.contains('letter') || text.contains('alphabet'))
+      return 'alphabets';
     if (text.contains('number')) return 'numbers';
     if (text.contains('greeting')) return 'greetings';
     return lesson.title.toLowerCase();
@@ -70,16 +78,26 @@ class _LearningScreenState extends State<LearningScreen> {
 
   String _categoryLabel(String key) {
     switch (key) {
-      case 'all': return 'All';
-      case 'alphabets': return 'Letters';
-      case 'numbers': return 'Numbers';
-      case 'greetings': return 'Greetings';
-      case 'family': return 'Family';
-      case 'food': return 'Food';
-      case 'common phrases': return 'Common Phrases';
-      case 'colors': return 'Colors';
-      case 'actions': return 'Actions';
-      default: return key;
+      case 'all':
+        return 'All';
+      case 'alphabets':
+        return 'Letters';
+      case 'numbers':
+        return 'Numbers';
+      case 'greetings':
+        return 'Greetings';
+      case 'family':
+        return 'Family';
+      case 'food':
+        return 'Food';
+      case 'common phrases':
+        return 'Common Phrases';
+      case 'colors':
+        return 'Colors';
+      case 'actions':
+        return 'Actions';
+      default:
+        return key;
     }
   }
 
@@ -93,7 +111,7 @@ class _LearningScreenState extends State<LearningScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -106,16 +124,20 @@ class _LearningScreenState extends State<LearningScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       elevation: 4,
       centerTitle: true,
-      title: const Text(
+      title: Text(
         'Learn USL',
-        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 20),
+        style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 20),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.search, color: Colors.black),
+          icon: Icon(Icons.search,
+              color: Theme.of(context).colorScheme.onSurface),
           onPressed: _showSearchDialog,
         ),
       ],
@@ -141,19 +163,32 @@ class _LearningScreenState extends State<LearningScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.green : Colors.white,
-                gradient: isSelected 
-                    ? LinearGradient(colors: [Colors.green.shade700, Colors.green.shade300]) 
+                color: isSelected ? Colors.green : Theme.of(context).cardColor,
+                gradient: isSelected
+                    ? LinearGradient(
+                        colors: [Colors.green.shade700, Colors.green.shade300])
                     : null,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: isSelected ? [BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(0, 2))] : [],
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.26),
+                            blurRadius: 3,
+                            offset: Offset(0, 2))
+                      ]
+                    : [],
               ),
               child: Text(
                 _categoryLabel(key),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? Colors.white : Colors.black,
+                  color: isSelected
+                      ? Colors.white
+                      : Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -174,12 +209,16 @@ class _LearningScreenState extends State<LearningScreen> {
   Widget _buildLessonsGrid() {
     var filtered = _selectedCategory == 'all'
         ? List<Lesson>.from(_lessons)
-        : _lessons.where((l) => _lessonCategoryKey(l) == _selectedCategory).toList();
+        : _lessons
+            .where((l) => _lessonCategoryKey(l) == _selectedCategory)
+            .toList();
 
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((l) =>
-      l.title.toLowerCase().contains(_searchQuery) ||
-          l.description.toLowerCase().contains(_searchQuery)).toList();
+      filtered = filtered
+          .where((l) =>
+              l.title.toLowerCase().contains(_searchQuery) ||
+              l.description.toLowerCase().contains(_searchQuery))
+          .toList();
     }
 
     return GridView.builder(
@@ -213,11 +252,11 @@ class _LearningScreenState extends State<LearningScreen> {
       child: Container(
         height: 200, // Fixed height for consistency
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -229,11 +268,11 @@ class _LearningScreenState extends State<LearningScreen> {
               height: 6,
               decoration: BoxDecoration(
                 color: categoryColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
               ),
             ),
             const SizedBox(height: 12),
-
             Container(
               width: iconSize,
               height: iconSize,
@@ -244,13 +283,11 @@ class _LearningScreenState extends State<LearningScreen> {
               child: Center(
                 child: Text(
                   lesson.icon,
-                  style: const TextStyle(fontSize: 42),
+                  style: TextStyle(fontSize: 42),
                 ),
               ),
             ),
-
             const SizedBox(height: 10),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
@@ -258,15 +295,13 @@ class _LearningScreenState extends State<LearningScreen> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-
             const SizedBox(height: 4),
-
             Text(
               '${lesson.totalSigns} signs',
               style: TextStyle(
@@ -274,9 +309,7 @@ class _LearningScreenState extends State<LearningScreen> {
                 color: Colors.grey.shade600,
               ),
             ),
-
             const SizedBox(height: 8),
-
             if (progress > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -288,11 +321,11 @@ class _LearningScreenState extends State<LearningScreen> {
                 ),
               )
             else
-              const Text(
+              Text(
                 'Lets get started!',
-                style: TextStyle(fontSize: 12, color: Color.fromARGB(255, 255, 107, 39)),
+                style: TextStyle(
+                    fontSize: 12, color: Color.fromARGB(255, 255, 107, 39)),
               ),
-
             const SizedBox(height: 10),
           ],
         ),
@@ -302,15 +335,24 @@ class _LearningScreenState extends State<LearningScreen> {
 
   Color _getCategoryColor(String categoryKey) {
     switch (categoryKey) {
-      case 'alphabets': return Colors.blue;
-      case 'numbers': return Colors.orange;
-      case 'greetings': return Colors.green;
-      case 'family': return Colors.purple;
-      case 'food': return Colors.deepOrange;
-      case 'common phrases': return Colors.teal;
-      case 'colors': return Colors.pink;
-      case 'actions': return Colors.indigo;
-      default: return Colors.green;
+      case 'alphabets':
+        return Colors.blue;
+      case 'numbers':
+        return Colors.orange;
+      case 'greetings':
+        return Colors.green;
+      case 'family':
+        return Colors.purple;
+      case 'food':
+        return Colors.deepOrange;
+      case 'common phrases':
+        return Colors.teal;
+      case 'colors':
+        return Colors.pink;
+      case 'actions':
+        return Colors.indigo;
+      default:
+        return Colors.green;
     }
   }
 
@@ -318,7 +360,7 @@ class _LearningScreenState extends State<LearningScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Search Lessons'),
+        title: Text('Search Lessons'),
         content: TextField(
           controller: _searchController,
           decoration: const InputDecoration(

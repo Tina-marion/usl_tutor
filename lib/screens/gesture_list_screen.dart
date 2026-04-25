@@ -55,7 +55,7 @@ class _GestureListContent extends StatelessWidget {
                 lesson.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: AppConstants.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
               ),
               const SizedBox(height: 8),
@@ -64,12 +64,12 @@ class _GestureListContent extends StatelessWidget {
                 style: Theme.of(context)
                     .textTheme
                     .bodyLarge
-                    ?.copyWith(color: AppConstants.textSecondary),
+                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               LinearProgressIndicator(
                 value: lesson.progress,
-                backgroundColor: Colors.white,
+                backgroundColor: Theme.of(context).cardColor,
                 color: AppConstants.primaryColor,
                 minHeight: 10,
                 borderRadius: BorderRadius.circular(999),
@@ -121,12 +121,12 @@ class _GestureListContent extends StatelessWidget {
       showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Locked gesture'),
-          content: const Text('Complete previous gestures to unlock this one.'),
+          title: Text('Locked gesture'),
+          content: Text('Complete previous gestures to unlock this one.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Got it'),
+              child: Text('Got it'),
             ),
           ],
         ),
@@ -141,3 +141,4 @@ class _GestureListContent extends StatelessWidget {
     );
   }
 }
+
