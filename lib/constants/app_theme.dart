@@ -117,13 +117,14 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    const darkBackground = Color(0xFF0D1117);
-    const darkCard = Color(0xFF161B22);
-    const darkPrimary = Color(0xFF58A6FF);
-    const darkAccent = Color(0xFF22D3EE);
-    const darkTextPrimary = Color(0xFFE6EDF3);
-    const darkTextSecondary = Color(0xFF8B949E);
-    const darkDivider = Color(0xFF30363D);
+    const darkBackground = Color(0xFF37353E);
+    const darkCard = Color(0xFF44444E);
+    const darkAccent = Color(0xFFF97316);
+    const darkPrimary = darkAccent;
+    const darkTextPrimary = Color(0xFFD3DAD9);
+    const darkTextSecondary = Color(0xFFAEB6B5);
+    const darkDivider = Color(0xFF595A64);
+    const darkSurfaceVariant = Color(0xFF3D3C46);
 
     return ThemeData(
       useMaterial3: true,
@@ -132,9 +133,12 @@ class AppTheme {
         primary: darkPrimary,
         secondary: darkAccent,
         surface: darkCard,
+        surfaceContainerHighest: darkSurfaceVariant,
         onPrimary: darkBackground,
         onSecondary: darkBackground,
         onSurface: darkTextPrimary,
+        onSurfaceVariant: darkTextSecondary,
+        outline: darkDivider,
       ),
       scaffoldBackgroundColor: darkBackground,
       textTheme:
@@ -168,12 +172,16 @@ class AppTheme {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         foregroundColor: darkTextPrimary,
+        iconTheme: const IconThemeData(color: darkTextPrimary),
+        actionsIconTheme: const IconThemeData(color: darkTextPrimary),
         titleTextStyle: GoogleFonts.poppins(
           fontSize: AppConstants.fontSizeLarge,
           fontWeight: FontWeight.w600,
           color: darkTextPrimary,
         ),
       ),
+      iconTheme: const IconThemeData(color: darkTextPrimary),
+      primaryIconTheme: const IconThemeData(color: darkTextPrimary),
       cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -193,6 +201,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
+          backgroundColor: darkPrimary,
+          foregroundColor: darkBackground,
           elevation: 0,
           padding: const EdgeInsets.symmetric(
             horizontal: AppConstants.paddingLarge,
@@ -207,9 +217,27 @@ class AppTheme {
           ),
         ),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: darkTextPrimary,
+          side: const BorderSide(color: darkDivider),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: darkPrimary,
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: darkCard,
+        fillColor: darkSurfaceVariant,
+        hintStyle: const TextStyle(color: darkTextSecondary),
+        labelStyle: const TextStyle(color: darkTextSecondary),
+        prefixIconColor: darkTextSecondary,
+        suffixIconColor: darkTextPrimary,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
           borderSide: BorderSide(color: darkDivider),
@@ -224,12 +252,49 @@ class AppTheme {
         ),
       ),
       dividerColor: darkDivider,
+      dividerTheme: const DividerThemeData(
+        color: darkDivider,
+        thickness: 1,
+      ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: darkCard,
         selectedItemColor: darkPrimary,
-        unselectedItemColor: darkTextSecondary,
+        unselectedItemColor: darkTextPrimary.withValues(alpha: 0.85),
+        selectedIconTheme: const IconThemeData(size: 26),
+        unselectedIconTheme: const IconThemeData(size: 24),
         type: BottomNavigationBarType.fixed,
         elevation: 8,
+      ),
+      listTileTheme: const ListTileThemeData(
+        tileColor: darkCard,
+        textColor: darkTextPrimary,
+        iconColor: darkTextSecondary,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: darkSurfaceVariant,
+        disabledColor: darkDivider,
+        selectedColor: darkPrimary,
+        secondarySelectedColor: darkAccent,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        labelStyle: const TextStyle(color: darkTextPrimary),
+        secondaryLabelStyle: const TextStyle(color: darkBackground),
+        brightness: Brightness.dark,
+      ),
+      progressIndicatorTheme:
+          const ProgressIndicatorThemeData(color: darkAccent),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return darkAccent;
+          }
+          return darkTextSecondary;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return darkAccent.withValues(alpha: 0.35);
+          }
+          return darkDivider;
+        }),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: darkAccent,

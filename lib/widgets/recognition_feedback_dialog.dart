@@ -31,7 +31,7 @@ class RecognitionFeedbackDialog extends StatelessWidget {
             const SizedBox(height: AppConstants.paddingMedium),
             _buildConfidenceScore(),
             const SizedBox(height: AppConstants.paddingLarge),
-            _buildFeedbackMessage(),
+            _buildFeedbackMessage(context),
             const SizedBox(height: AppConstants.paddingMedium),
             _buildSuggestions(),
             const SizedBox(height: AppConstants.paddingLarge),
@@ -157,7 +157,7 @@ class RecognitionFeedbackDialog extends StatelessWidget {
         .slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildFeedbackMessage() {
+  Widget _buildFeedbackMessage(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
       decoration: BoxDecoration(
