@@ -29,6 +29,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   bool _isUploading = false;
   int _countdown = 0;
   Timer? _countdownTimer;
+  DateTime? _recordingStartedAt;
   String? _feedback;
   String? _translation;
   final _progressService = ProgressService();
@@ -240,6 +241,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _countdown = 0;
       _translation = null;
     });
+    _recordingStartedAt = DateTime.now();
 
     _cameraController!
         .startVideoRecording()
@@ -263,7 +265,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
       });
 
       final translation = await InferenceService.translateVideo(localFile);
-      await _progressService.addPracticeTime(1);
+      final startedAt = _recordingStartedAt;
+      if (startedAt != null) {
+        await _progressService
+            .addPracticeDuration(DateTime.now().difference(startedAt));
+      }
 
       setState(() {
         _translation = translation;
@@ -274,6 +280,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
         _feedback = 'Processing error: $e';
       });
     } finally {
+      _recordingStartedAt = null;
       setState(() {
         _isUploading = false;
       });

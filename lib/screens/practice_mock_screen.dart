@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import '../models/gesture.dart';
 import '../services/mock_data_service.dart';
 import '../services/mock_recognition_service.dart';
+import '../services/progress_service.dart';
 import '../constants/app_constants.dart';
 import '../widgets/recognition_feedback_dialog.dart';
 
@@ -30,12 +31,15 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
   double _bestScore = 0.0;
   int _countdown = 0;
   Timer? _countdownTimer;
+  DateTime? _recordingStartedAt;
+  final ProgressService _progressService = ProgressService();
 
   @override
   void initState() {
     super.initState();
     _currentGesture = widget.initialGesture ?? _getRandomGesture();
     _initializeCamera();
+    _progressService.init();
   }
 
   Future<void> _initializeCamera() async {
@@ -85,6 +89,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
       _isRecording = true;
       _countdown = 3;
     });
+    _recordingStartedAt = DateTime.now();
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdown > 1) {
@@ -104,6 +109,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
       _isRecording = false;
       _countdown = 0;
     });
+    _recordingStartedAt = null;
   }
 
   Future<void> _processGesture() async {
@@ -115,6 +121,13 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
     final result = await _recognitionService.recognizeGesture(
       targetGesture: _currentGesture.name,
     );
+
+    final startedAt = _recordingStartedAt;
+    if (startedAt != null) {
+      await _progressService
+          .addPracticeDuration(DateTime.now().difference(startedAt));
+    }
+    _recordingStartedAt = null;
 
     setState(() {
       _attempts++;
@@ -595,4 +608,3 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
     );
   }
 }
-
