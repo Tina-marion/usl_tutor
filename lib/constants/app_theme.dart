@@ -7,9 +7,19 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppConstants.primaryColor,
-        brightness: Brightness.light,
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
+        primary: AppConstants.primaryColor,
+        secondary: AppConstants.secondaryColor,
+        tertiary: AppConstants.accentColor,
+        surface: AppConstants.cardColor,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onTertiary: Colors.white,
+        onSurface: AppConstants.textPrimary,
+        onSurfaceVariant: AppConstants.textSecondary,
+        outline: AppConstants.dividerColor,
+        error: AppConstants.errorColor,
       ),
       scaffoldBackgroundColor: AppConstants.backgroundColor,
 
@@ -62,9 +72,16 @@ class AppTheme {
         color: AppConstants.cardColor,
       ),
 
+      dividerTheme: const DividerThemeData(
+        color: AppConstants.dividerColor,
+        thickness: 1,
+      ),
+
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
+          backgroundColor: AppConstants.primaryColor,
+          foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(
             horizontal: AppConstants.paddingLarge,
@@ -80,10 +97,28 @@ class AppTheme {
         ),
       ),
 
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppConstants.primaryColor,
+          side: const BorderSide(color: AppConstants.dividerColor),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+          ),
+        ),
+      ),
+
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppConstants.primaryColor,
+        ),
+      ),
+
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppConstants.cardColor,
+        hintStyle: const TextStyle(color: AppConstants.textSecondary),
+        labelStyle: const TextStyle(color: AppConstants.textSecondary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
           borderSide: BorderSide(color: AppConstants.dividerColor),
@@ -107,6 +142,21 @@ class AppTheme {
         elevation: 8,
       ),
 
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppConstants.primaryColor,
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppConstants.textPrimary,
+        contentTextStyle: GoogleFonts.poppins(
+          color: Colors.white,
+          fontSize: AppConstants.fontSizeMedium,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+        ),
+      ),
+
       // Floating Action Button Theme
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppConstants.primaryColor,
@@ -117,14 +167,14 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    const darkBackground = Color(0xFF37353E);
-    const darkCard = Color(0xFF44444E);
-    const darkAccent = Color(0xFFF97316);
-    const darkPrimary = darkAccent;
-    const darkTextPrimary = Color(0xFFD3DAD9);
-    const darkTextSecondary = Color(0xFFAEB6B5);
-    const darkDivider = Color(0xFF595A64);
-    const darkSurfaceVariant = Color(0xFF3D3C46);
+    const darkBackground = Color(0xFF0B1220);
+    const darkCard = Color(0xFF111C2E);
+    const darkAccent = Color(0xFFF59E0B);
+    const darkPrimary = Color(0xFF14B8A6);
+    const darkTextPrimary = Color(0xFFE2E8F0);
+    const darkTextSecondary = Color(0xFF94A3B8);
+    const darkDivider = Color(0xFF243045);
+    const darkSurfaceVariant = Color(0xFF172338);
 
     return ThemeData(
       useMaterial3: true,

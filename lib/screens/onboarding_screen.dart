@@ -44,6 +44,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _completeOnboarding();
   }
 
+  void _goBack() {
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+        duration: AppConstants.animationNormal,
+        curve: Curves.easeInOut,
+      );
+      return;
+    }
+
+    Navigator.pushReplacementNamed(context, '/profile-creation');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,19 +84,65 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildTopBar() {
     return Padding(
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
-      child: Align(
-        alignment: Alignment.topRight,
-        child: TextButton(
-          onPressed: _skipOnboarding,
-          child: Text(
-            AppConstants.skipButton,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: AppConstants.fontSizeNormal,
-              fontWeight: FontWeight.w600,
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: _goBack,
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            tooltip: 'Back',
+          ),
+          const SizedBox(width: 4),
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Theme.of(context).cardColor,
+                  border: Border.all(color: AppConstants.dividerColor),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/dp.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                AppConstants.appName,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: AppConstants.fontSizeLarge,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: _skipOnboarding,
+            child: Text(
+              AppConstants.skipButton,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: AppConstants.fontSizeNormal,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -124,27 +182,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildIllustration(String emoji) {
     return Container(
-      width: 200,
-      height: 200,
+      width: 220,
+      height: 220,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppConstants.primaryColor.withOpacity(0.1),
-            AppConstants.secondaryColor.withOpacity(0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Theme.of(context).cardColor,
+        border: Border.all(color: AppConstants.dividerColor),
         borderRadius: BorderRadius.circular(100),
+        boxShadow: [
+          BoxShadow(
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Center(
-        child: Text(
-          emoji,
-          style: TextStyle(fontSize: 100),
-        ),
+      child: ClipOval(
+        child: _isAssetPath(emoji)
+            ? Image.asset(
+                emoji,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              )
+            : Center(
+                child: Text(
+                  emoji,
+                  style: const TextStyle(fontSize: 100),
+                ),
+              ),
       ),
     ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack);
   }
+
+  bool _isAssetPath(String value) => value.startsWith('assets/');
 
   Widget _buildBottomSection() {
     return Padding(
@@ -218,4 +289,3 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 }
-

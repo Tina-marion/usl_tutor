@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_constants.dart';
 import '../services/user_service.dart';
+import '../widgets/app_logo.dart';
 
 class ProfileCreationScreen extends StatefulWidget {
   const ProfileCreationScreen({super.key});
@@ -79,17 +80,14 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
             children: [
               const SizedBox(height: 40),
               // Header Icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppConstants.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(
-                  Icons.person_add,
-                  size: 40,
-                  color: AppConstants.primaryColor,
+              const AppLogoMark(size: 84),
+              const SizedBox(height: 24),
+              Text(
+                AppConstants.appName,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 32),
@@ -249,4 +247,3 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
     );
   }
 }
-

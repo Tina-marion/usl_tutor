@@ -5,12 +5,16 @@ import '../constants/app_constants.dart';
 
 class RecognitionFeedbackDialog extends StatelessWidget {
   final RecognitionResult result;
+  final VoidCallback? onMarkLearned;
+  final VoidCallback? onMarkMastered;
   final VoidCallback onTryAgain;
   final VoidCallback onNextSign;
 
   const RecognitionFeedbackDialog({
     super.key,
     required this.result,
+    this.onMarkLearned,
+    this.onMarkMastered,
     required this.onTryAgain,
     required this.onNextSign,
   });
@@ -259,6 +263,52 @@ class RecognitionFeedbackDialog extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
+        if (onMarkMastered != null) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onMarkMastered,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.warningColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Mark as Mastered',
+                style: TextStyle(
+                  fontSize: AppConstants.fontSizeNormal,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (onMarkLearned != null) ...[
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: onMarkLearned,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: BorderSide(
+                  color: result.isCorrect
+                      ? AppConstants.accentColor
+                      : AppConstants.primaryColor,
+                ),
+              ),
+              child: const Text(
+                'Mark as Learned',
+                style: TextStyle(
+                  fontSize: AppConstants.fontSizeNormal,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(

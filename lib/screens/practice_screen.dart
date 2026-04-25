@@ -9,6 +9,7 @@ import '../constants/app_constants.dart';
 import '../models/gesture.dart';
 import '../services/mock_data_service.dart';
 import '../services/progress_service.dart';
+import '../widgets/app_logo.dart';
 
 enum PracticeMode { numbers, alphabets }
 
@@ -33,6 +34,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   String? _feedback;
   String? _translation;
   final _progressService = ProgressService();
+  bool _isProgressReady = false;
   PracticeMode? _selectedMode;
   List<GestureModel> _practiceGestures = [];
   int _currentGestureIndex = 0;
@@ -67,7 +69,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
     if (widget.gesture != null) {
       _initializeVideo();
     }
-    _progressService.init();
+    _initializeProgress();
+  }
+
+  Future<void> _initializeProgress() async {
+    await _progressService.init();
+    if (!mounted) return;
+    setState(() {
+      _isProgressReady = true;
+    });
   }
 
   Future<void> _initializeVideo() async {
@@ -291,10 +301,43 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
   }
 
+  Future<void> _markActiveGestureAsLearned() async {
+    final activeGesture = _activeGesture;
+    if (!_isProgressReady || activeGesture == null) {
+      return;
+    }
+
+    await _progressService.markGestureAsLearned(activeGesture.id);
+
+    if (!mounted) return;
+    Navigator.pop(context);
+    if (widget.gesture != null) {
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _markActiveGestureAsMastered() async {
+    final activeGesture = _activeGesture;
+    if (!_isProgressReady || activeGesture == null) {
+      return;
+    }
+
+    await _progressService.markGestureAsMastered(activeGesture.id);
+
+    if (!mounted) return;
+    Navigator.pop(context);
+    if (widget.gesture != null) {
+      Navigator.pop(context);
+    }
+  }
+
   void _showResultDialog() {
     final bool hasTranslation =
         _translation != null && _translation!.isNotEmpty;
     final String gestureExpected = _activeGesture?.name ?? 'sign';
+    final bool isExactMatch = hasTranslation &&
+        _activeGesture != null &&
+        _translation!.toLowerCase() == gestureExpected.toLowerCase();
 
     showDialog<void>(
       context: context,
@@ -399,17 +442,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text('Practice Again'),
           ),
+          if (_activeGesture != null && isExactMatch)
+            TextButton(
+              onPressed: _isProgressReady ? _markActiveGestureAsMastered : null,
+              child: Text('Mark as Mastered'),
+            ),
           if (_activeGesture != null && hasTranslation)
             ElevatedButton(
-              onPressed: () async {
-                await _progressService.markGestureAsLearned(_activeGesture!.id);
-                if (mounted) {
-                  Navigator.pop(context);
-                  if (widget.gesture != null) {
-                    Navigator.pop(context);
-                  }
-                }
-              },
+              onPressed: _isProgressReady ? _markActiveGestureAsLearned : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppConstants.primaryColor,
               ),
@@ -539,10 +579,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
-        title: Text(
-          _activeGesture != null
-              ? 'Practice: ${_activeGesture!.name}'
-              : 'Practice Mode',
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Text(
+              _activeGesture != null
+                  ? 'Practice: ${_activeGesture!.name}'
+                  : 'Practice Mode',
+            ),
+          ],
         ),
       ),
       body: Column(

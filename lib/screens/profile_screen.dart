@@ -8,6 +8,7 @@ import '../screens/edit_profile_screen.dart';
 import '../services/progress_service.dart';
 import '../services/theme_service.dart';
 import '../services/user_service.dart';
+import '../widgets/app_logo.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -30,6 +31,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color get _shadowColor {
     final alpha = Theme.of(context).brightness == Brightness.dark ? 0.30 : 0.05;
     return Colors.black.withValues(alpha: alpha);
+  }
+
+  String get _avatarInitials {
+    final parts = _user.name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   @override
@@ -60,7 +73,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Profile'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Text('My Profile'),
+          ],
+        ),
         elevation: 0,
         actions: [
           IconButton(
@@ -108,14 +128,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
-            child: Icon(
-              Icons.person,
-              size: 50,
-              color: AppConstants.primaryColor,
-            ),
+          Stack(
+            children: [
+              Container(
+                width: 104,
+                height: 104,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppConstants.primaryColor,
+                      AppConstants.accentColor,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppConstants.primaryColor.withValues(alpha: 0.28),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    _avatarInitials,
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 2,
+                bottom: 2,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: AppConstants.successColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppConstants.paddingMedium),
           Text(
@@ -572,8 +638,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.delete_forever,
-                  color: AppConstants.errorColor),
+              leading:
+                  Icon(Icons.delete_forever, color: AppConstants.errorColor),
               title: Text('Reset Progress',
                   style: TextStyle(color: AppConstants.errorColor)),
               onTap: () async {

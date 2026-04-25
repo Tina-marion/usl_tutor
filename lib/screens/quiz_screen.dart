@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart' as vp;
 import '../constants/app_constants.dart';
 import '../models/quiz.dart';
 import '../services/quiz_service.dart';
+import '../widgets/app_logo.dart';
 import 'quiz_results_screen.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -92,7 +93,7 @@ class _QuizScreenState extends State<QuizScreen> {
       timeTaken: Duration(seconds: _secondsElapsed),
     );
 
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => QuizResultsScreen(
@@ -146,9 +147,16 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Text(
-          "Quiz Time 🎯",
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const AppLogoMark(size: 32),
+            const SizedBox(width: 10),
+            Text(
+              "Quiz Time 🎯",
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
         Text(

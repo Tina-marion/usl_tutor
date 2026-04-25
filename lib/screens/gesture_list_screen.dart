@@ -5,6 +5,7 @@ import '../models/gesture.dart';
 import '../models/lesson.dart';
 import '../services/mock_data_service.dart';
 import '../widgets/gesture_card.dart';
+import '../widgets/app_logo.dart';
 import 'gesture_detail_screen.dart';
 
 class GestureListScreen extends StatelessWidget {
@@ -17,7 +18,14 @@ class GestureListScreen extends StatelessWidget {
     final gestures = MockDataService.getGesturesForLesson(lesson);
     return Scaffold(
       appBar: AppBar(
-        title: Text(lesson.title),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Flexible(child: Text(lesson.title)),
+          ],
+        ),
       ),
       body: _GestureListContent(lesson: lesson, gestures: gestures),
     );
@@ -61,10 +69,8 @@ class _GestureListContent extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 '${gestures.length} gestures · ${lesson.learnedSigns}/${lesson.totalSigns} mastered',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               LinearProgressIndicator(
@@ -141,4 +147,3 @@ class _GestureListContent extends StatelessWidget {
     );
   }
 }
-

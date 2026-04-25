@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../models/user.dart';
 import '../services/user_service.dart';
+import '../widgets/app_logo.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final UserProfile user;
@@ -81,7 +82,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Edit Profile'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Text('Edit Profile'),
+          ],
+        ),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -268,4 +276,3 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
-

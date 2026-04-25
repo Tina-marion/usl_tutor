@@ -18,7 +18,7 @@ class OnboardingData {
       title: 'Learn Sign Language\nAnytime, Anywhere',
       description:
           'Master USL through interactive lessons and real-time practice with our AI-powered tutor.',
-      image: '📚',
+      image: 'assets/dp.png',
     ),
     OnboardingPage(
       title: 'Practice with AI\nGet Instant Feedback',

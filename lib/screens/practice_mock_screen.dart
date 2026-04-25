@@ -33,13 +33,22 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
   Timer? _countdownTimer;
   DateTime? _recordingStartedAt;
   final ProgressService _progressService = ProgressService();
+  bool _isProgressReady = false;
 
   @override
   void initState() {
     super.initState();
     _currentGesture = widget.initialGesture ?? _getRandomGesture();
     _initializeCamera();
-    _progressService.init();
+    _initializeProgress();
+  }
+
+  Future<void> _initializeProgress() async {
+    await _progressService.init();
+    if (!mounted) return;
+    setState(() {
+      _isProgressReady = true;
+    });
   }
 
   Future<void> _initializeCamera() async {
@@ -148,6 +157,22 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
       barrierDismissible: false,
       builder: (context) => RecognitionFeedbackDialog(
         result: result,
+        onMarkLearned: result.isCorrect && _isProgressReady
+            ? () async {
+                await _progressService.markGestureAsLearned(_currentGesture.id);
+                if (!mounted) return;
+                Navigator.pop(context);
+              }
+            : null,
+        onMarkMastered: result.isCorrect && _isProgressReady
+            ? () async {
+                await _progressService
+                    .markGestureAsMastered(_currentGesture.id);
+                if (!mounted) return;
+                Navigator.pop(context);
+                _loadNextGesture();
+              }
+            : null,
         onTryAgain: () {
           Navigator.pop(context);
         },

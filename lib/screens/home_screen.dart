@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../constants/app_constants.dart';
 import '../services/progress_service.dart';
 import '../services/user_service.dart';
+import '../widgets/app_logo.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,8 +18,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int signsLearnedThisWeek = 12;
   int currentStreak = 7;
   String greeting = 'Hello';
-  String dailyChallenge = 'Basic Greetings';
-  double dailyChallengeProgress = 0.65;
+  int level = 1;
+  int xp = 0;
+  int xpForNextLevel = 100;
 
   final ProgressService _progressService = ProgressService();
   final UserService _userService = UserService();
@@ -29,9 +32,16 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadHomeData();
   }
 
+  Future<void> _openAndRefresh(String route) async {
+    await Navigator.pushNamed(context, route);
+    if (!mounted) return;
+    await _loadHomeData();
+  }
+
   Future<void> _loadHomeData() async {
     await _progressService.init();
     await _userService.init();
+    final stats = _progressService.getStats();
     final streakData = await _progressService.recalculateStreakFromActivities();
     await _userService.updateStreakData(
       currentStreak: streakData['currentStreak'] as int,
@@ -45,7 +55,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       userName = profileName.isEmpty ? 'Learner' : profileName;
+      signsLearnedThisWeek = stats['learnedCount'] as int? ?? 0;
       currentStreak = userProfile.currentStreak;
+      level = userProfile.level;
+      xp = userProfile.xp;
+      xpForNextLevel = userProfile.xpForNextLevel;
       _isLoading = false;
     });
   }
@@ -56,7 +70,10 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.green))
+          ? const Center(
+              child:
+                  CircularProgressIndicator(color: AppConstants.primaryColor),
+            )
           : RefreshIndicator(
               onRefresh: () async {
                 await _loadHomeData();
@@ -74,14 +91,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       streak: currentStreak,
                     ),
                     const SizedBox(height: 32),
-                    _StreakCard(streak: currentStreak),
-                    const SizedBox(height: 32),
+                    if (currentStreak > 0) ...[
+                      _StreakCard(streak: currentStreak),
+                      const SizedBox(height: 32),
+                    ],
                     _DailyChallengeCard(
-                      dailyChallenge: dailyChallenge,
-                      progress: dailyChallengeProgress,
+                      level: level,
+                      xp: xp,
+                      xpForNextLevel: xpForNextLevel,
+                      onStartChallenge: () => _openAndRefresh('/learning'),
                     ),
                     const SizedBox(height: 36),
-                    _QuickActionsSection(),
+                    _QuickActionsSection(onOpenRoute: _openAndRefresh),
                     const SizedBox(height: 40),
                     _RecentActivitySection(progressService: _progressService),
                     const SizedBox(height: 80),
@@ -91,11 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
       bottomNavigationBar: _buildBottomNavigationBar(),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/practice'),
+        onPressed: () => _openAndRefresh('/practice'),
         icon: Icon(Icons.videocam_rounded, size: 28),
         label: Text('Start Video Practice',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.green,
+        backgroundColor: AppConstants.primaryColor,
         elevation: 8,
       ).animate().scale(duration: 400.ms),
     );
@@ -105,14 +126,23 @@ class _HomeScreenState extends State<HomeScreen> {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      title: Text(
-        'USL Tutor',
-        style: TextStyle(
-          fontWeight: FontWeight.w800,
-          color:
-              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.87),
-          fontSize: 24,
-        ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppLogoMark(size: 30),
+          const SizedBox(width: 10),
+          Text(
+            'USL Tutor',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.87),
+              fontSize: 24,
+            ),
+          ),
+        ],
       ),
       actions: [
         IconButton(
@@ -142,16 +172,16 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             IconButton(
                 icon: Icon(Icons.school_rounded,
-                    color: Color.fromARGB(255, 43, 14, 41), size: 28),
-                onPressed: () => Navigator.pushNamed(context, '/learning')),
+                    color: AppConstants.primaryColor, size: 28),
+                onPressed: () => _openAndRefresh('/learning')),
             IconButton(
                 icon: Icon(Icons.videocam_rounded,
-                    color: Color.fromARGB(255, 43, 14, 41), size: 28),
-                onPressed: () => Navigator.pushNamed(context, '/practice')),
+                    color: AppConstants.primaryColor, size: 28),
+                onPressed: () => _openAndRefresh('/practice')),
             IconButton(
                 icon: Icon(Icons.person_rounded,
-                    color: Color.fromARGB(255, 43, 14, 41), size: 28),
-                onPressed: () => Navigator.pushNamed(context, '/profile')),
+                    color: AppConstants.primaryColor, size: 28),
+                onPressed: () => _openAndRefresh('/profile')),
           ],
         ),
       ),
@@ -195,34 +225,36 @@ class _WelcomeSection extends StatelessWidget {
                 ),
               ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.local_fire_department,
-                      color: Colors.orange, size: 22),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$streak day streak',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                      fontSize: 15,
+            if (streak > 0)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppConstants.warningColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.local_fire_department,
+                        color: AppConstants.warningColor, size: 22),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$streak day streak',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppConstants.warningColor,
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 12),
         Text(
-          "You've learned $signsLearned signs this week! 🔥",
+          'Start learning USL today 👋',
           style: TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.w600,
@@ -239,6 +271,15 @@ class _StreakCard extends StatelessWidget {
 
   const _StreakCard({required this.streak});
 
+  String get _titleText =>
+      streak <= 0 ? 'Start your streak!' : "You're on a roll!";
+
+  String get _subtitleText => streak <= 0
+      ? 'Complete one practice or learning session today.'
+      : '$streak day learning streak';
+
+  String get _buttonText => streak <= 0 ? 'Begin Now' : 'Keep it up!';
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -248,25 +289,32 @@ class _StreakCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.07),
               blurRadius: 20,
               offset: const Offset(0, 8)),
         ],
       ),
       child: Row(
         children: [
-          Icon(Icons.whatshot_rounded, color: Colors.orange, size: 42),
+          Icon(
+            Icons.whatshot_rounded,
+            color: AppConstants.warningColor,
+            size: 42,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "You're on a roll!",
+                  _titleText,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '$streak day learning streak',
+                  _subtitleText,
                   style: TextStyle(
                     fontSize: 15,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -278,11 +326,11 @@ class _StreakCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.orange,
+              color: AppConstants.warningColor,
               borderRadius: BorderRadius.circular(30),
             ),
             child: Text(
-              'Keep it up!',
+              _buttonText,
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
@@ -294,14 +342,24 @@ class _StreakCard extends StatelessWidget {
 }
 
 class _DailyChallengeCard extends StatelessWidget {
-  final String dailyChallenge;
-  final double progress;
+  final int level;
+  final int xp;
+  final int xpForNextLevel;
+  final Future<void> Function() onStartChallenge;
 
-  const _DailyChallengeCard(
-      {required this.dailyChallenge, required this.progress});
+  const _DailyChallengeCard({
+    required this.level,
+    required this.xp,
+    required this.xpForNextLevel,
+    required this.onStartChallenge,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final progress = xpForNextLevel == 0 ? 0.0 : (xp / xpForNextLevel);
+    final clampedProgress = progress.clamp(0.0, 1.0);
+    final remainingXp = (xpForNextLevel - xp).clamp(0, xpForNextLevel);
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -309,7 +367,10 @@ class _DailyChallengeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, 10)),
         ],
@@ -319,8 +380,11 @@ class _DailyChallengeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.emoji_events_rounded,
-                  color: Color.fromARGB(255, 243, 210, 25), size: 38),
+              Icon(
+                Icons.emoji_events_rounded,
+                color: AppConstants.accentColor,
+                size: 38,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
@@ -338,7 +402,7 @@ class _DailyChallengeCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Master "$dailyChallenge" today!',
+            'Reach Level ${level + 1}',
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -351,21 +415,21 @@ class _DailyChallengeCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: LinearProgressIndicator(
-              value: progress,
+              value: clampedProgress,
               minHeight: 14,
               backgroundColor: Theme.of(context).dividerColor,
-              valueColor: const AlwaysStoppedAnimation(
-                  Color.fromARGB(255, 248, 110, 17)),
+              valueColor:
+                  const AlwaysStoppedAnimation(AppConstants.primaryColor),
             ),
           ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${(progress * 100).toInt()}% completed",
+              Text('Level $level: $xp/$xpForNextLevel XP',
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              Text("Keep going!",
+              Text('$remainingXp XP left',
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600)),
@@ -375,9 +439,9 @@ class _DailyChallengeCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/learning'),
+              onPressed: onStartChallenge,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 44, 28, 71),
+                backgroundColor: AppConstants.primaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
@@ -395,7 +459,9 @@ class _DailyChallengeCard extends StatelessWidget {
 }
 
 class _QuickActionsSection extends StatelessWidget {
-  const _QuickActionsSection();
+  final Future<void> Function(String route) onOpenRoute;
+
+  const _QuickActionsSection({required this.onOpenRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -421,15 +487,17 @@ class _QuickActionsSection extends StatelessWidget {
                 child: _SimpleActionCard(
                     icon: Icons.school_rounded,
                     label: 'Learn',
-                    color: Colors.blue,
-                    route: '/learning')),
+                    color: AppConstants.secondaryColor,
+                    route: '/learning',
+                    onOpenRoute: onOpenRoute)),
             const SizedBox(width: 16),
             Expanded(
                 child: _SimpleActionCard(
                     icon: Icons.videocam_rounded,
                     label: 'Practice',
-                    color: const Color.fromARGB(255, 97, 43, 97),
-                    route: '/practice')),
+                    color: AppConstants.primaryColor,
+                    route: '/practice',
+                    onOpenRoute: onOpenRoute)),
           ],
         ),
         const SizedBox(height: 16),
@@ -439,15 +507,17 @@ class _QuickActionsSection extends StatelessWidget {
                 child: _SimpleActionCard(
                     icon: Icons.quiz_rounded,
                     label: 'Quiz',
-                    color: Colors.orange,
-                    route: '/quiz')),
+                    color: AppConstants.accentColor,
+                    route: '/quiz',
+                    onOpenRoute: onOpenRoute)),
             const SizedBox(width: 16),
             Expanded(
                 child: _SimpleActionCard(
                     icon: Icons.bar_chart_rounded,
                     label: 'Progress',
-                    color: Colors.green,
-                    route: '/profile')),
+                    color: AppConstants.successColor,
+                    route: '/profile',
+                    onOpenRoute: onOpenRoute)),
           ],
         ),
       ],
@@ -460,18 +530,20 @@ class _SimpleActionCard extends StatelessWidget {
   final String label;
   final Color color;
   final String route;
+  final Future<void> Function(String route) onOpenRoute;
 
   const _SimpleActionCard({
     required this.icon,
     required this.label,
     required this.color,
     required this.route,
+    required this.onOpenRoute,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, route),
+      onTap: () => onOpenRoute(route),
       child: Container(
         height: 158,
         decoration: BoxDecoration(
@@ -479,8 +551,10 @@ class _SimpleActionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.08),
                 blurRadius: 16,
                 offset: const Offset(0, 8)),
           ],
@@ -515,8 +589,55 @@ class _RecentActivitySection extends StatelessWidget {
 
   const _RecentActivitySection({required this.progressService});
 
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'mastered':
+        return Icons.workspace_premium;
+      case 'learned':
+        return Icons.check;
+      case 'quiz':
+        return Icons.quiz;
+      case 'practiced':
+        return Icons.play_arrow;
+      default:
+        return Icons.history;
+    }
+  }
+
+  Color _colorForType(String type) {
+    switch (type) {
+      case 'mastered':
+        return AppConstants.accentColor;
+      case 'learned':
+        return AppConstants.successColor;
+      case 'quiz':
+        return AppConstants.secondaryColor;
+      case 'practiced':
+        return AppConstants.primaryColor;
+      default:
+        return AppConstants.textSecondary;
+    }
+  }
+
+  String _timeAgo(DateTime timestamp) {
+    final diff = DateTime.now().difference(timestamp);
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inHours < 1) {
+      final minutes = diff.inMinutes;
+      return '$minutes minute${minutes == 1 ? '' : 's'} ago';
+    }
+    if (diff.inDays < 1) {
+      final hours = diff.inHours;
+      return '$hours hour${hours == 1 ? '' : 's'} ago';
+    }
+    final days = diff.inDays;
+    return '$days day${days == 1 ? '' : 's'} ago';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final activities = progressService.getActivities().take(5).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -538,39 +659,69 @@ class _RecentActivitySection extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.07),
                   blurRadius: 18,
                   offset: const Offset(0, 8)),
             ],
           ),
-          child: const Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                    backgroundColor: Colors.green,
-                    child: Icon(Icons.check, color: Colors.white)),
-                title: Text('Completed "Hello"',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                subtitle:
-                    Text('2 days ago', style: TextStyle(color: Colors.grey)),
-              ),
-              Divider(height: 24),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    child: Icon(Icons.play_arrow, color: Colors.white)),
-                title: Text('Practice Session',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                subtitle:
-                    Text('4 days ago', style: TextStyle(color: Colors.grey)),
-              ),
-            ],
-          ),
+          child: activities.isEmpty
+              ? Text(
+                  'No activity yet. Start learning or practice to see updates here.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                )
+              : Column(
+                  children: [
+                    for (int i = 0; i < activities.length; i++) ...[
+                      Builder(
+                        builder: (context) {
+                          final activity = activities[i];
+                          final type =
+                              (activity['type'] as String? ?? '').trim();
+                          final title =
+                              (activity['title'] as String? ?? 'Activity')
+                                  .trim();
+                          final timestamp = activity['timestamp'] as DateTime?;
+                          final subtitle = timestamp == null
+                              ? 'recently'
+                              : _timeAgo(timestamp);
+
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              backgroundColor: _colorForType(type),
+                              child: Icon(
+                                _iconForType(type),
+                                color: Colors.white,
+                              ),
+                            ),
+                            title: Text(
+                              title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            subtitle: Text(
+                              subtitle,
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      if (i != activities.length - 1) const Divider(height: 24),
+                    ],
+                  ],
+                ),
         ),
       ],
     );

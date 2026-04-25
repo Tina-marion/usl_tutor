@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../constants/app_constants.dart';
 import '../services/user_service.dart';
+import '../widgets/app_logo.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -46,27 +47,6 @@ class _SplashScreenState extends State<SplashScreen> {
             // Big Animated Logo
             _buildAnimatedLogo(),
 
-            const SizedBox(height: 40),
-
-            // App Name
-            Text(
-              AppConstants.appName,
-              style: TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.w900,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.87),
-                letterSpacing: -1,
-              ),
-            )
-                .animate()
-                .fadeIn(duration: 700.ms, delay: 200.ms)
-                .slideY(begin: 0.4, end: 0, curve: Curves.easeOutCubic),
-
-            const SizedBox(height: 12),
-
             // Tagline
             Text(
               AppConstants.appTagline,
@@ -92,29 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildAnimatedLogo() {
-    return Container(
-      width: 180,
-      height: 180,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.25),
-            blurRadius: 30,
-            spreadRadius: 5,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Icon(
-          Icons.sign_language,
-          size: 110,
-          color: Colors.green.shade600,
-        ),
-      ),
-    )
+    return const AppLogoMark(size: 180, showBorder: false)
         .animate()
         .scale(
           duration: 800.ms,

@@ -8,34 +8,34 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // Colors
-  static const Color primaryColor = Color(0xFF6C63FF);
-  static const Color secondaryColor = Color(0xFFFF6584);
-  static const Color accentColor = Color(0xFF4CAF50);
-  static const Color successColor = Color(0xFF4CAF50);
-  static const Color warningColor = Color(0xFFFF9800);
+  static const Color primaryColor = Color(0xFF0F766E);
+  static const Color secondaryColor = Color(0xFF1D4ED8);
+  static const Color accentColor = Color(0xFFF59E0B);
+  static const Color successColor = Color(0xFF10B981);
+  static const Color warningColor = Color(0xFFF59E0B);
   static const Color errorColor = Color(0xFFF44336);
 
-  static const Color backgroundColor = Color(0xFFF5F5F5);
+  static const Color backgroundColor = Color(0xFFF7FAFC);
   static const Color cardColor = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
-  static const Color dividerColor = Color(0xFFE0E0E0);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color dividerColor = Color(0xFFE2E8F0);
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF6C63FF), Color(0xFF5A52E0)],
+    colors: [Color(0xFF0F766E), Color(0xFF115E59)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient successGradient = LinearGradient(
-    colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+    colors: [Color(0xFF10B981), Color(0xFF059669)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient backgroundGradient = LinearGradient(
-    colors: [Color(0xFF6C63FF), Color(0xFF5A52E0)],
+    colors: [Color(0xFFEFF6FF), Color(0xFFF0FDFA)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

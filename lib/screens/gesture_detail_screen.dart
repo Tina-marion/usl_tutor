@@ -6,6 +6,7 @@ import 'package:chewie/chewie.dart';
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
 import '../services/progress_service.dart';
+import '../widgets/app_logo.dart';
 import 'practice_screen.dart';
 
 class GestureDetailScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class GestureDetailScreen extends StatefulWidget {
 class _GestureDetailScreenState extends State<GestureDetailScreen> {
   final _progressService = ProgressService();
   bool _isFavorite = false;
+  bool _isProgressReady = false;
   VideoPlayerController? _videoController;
   ChewieController? _chewieController;
 
@@ -75,8 +77,10 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
 
   Future<void> _loadFavoriteState() async {
     await _progressService.init();
+    if (!mounted) return;
     setState(() {
       _isFavorite = _progressService.isFavorite(widget.gesture.id);
+      _isProgressReady = true;
     });
   }
 
@@ -99,6 +103,14 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
   }
 
   Future<void> _markAsLearned() async {
+    if (!_isProgressReady) {
+      await _progressService.init();
+      if (!mounted) return;
+      setState(() {
+        _isProgressReady = true;
+      });
+    }
+
     await _progressService.markGestureAsLearned(widget.gesture.id);
 
     if (mounted) {
@@ -168,6 +180,20 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () => Navigator.pop(context),
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppLogoMark(size: 26),
+          const SizedBox(width: 10),
+          Text(
+            widget.gesture.name,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ],
       ),
       actions: [
         IconButton(
@@ -467,7 +493,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _markAsLearned,
+                onPressed: _isProgressReady ? _markAsLearned : null,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: AppConstants.primaryColor),
@@ -506,4 +532,3 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
     );
   }
 }
-

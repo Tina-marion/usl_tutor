@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/lesson.dart';
 import '../services/mock_data_service.dart';
+import '../widgets/app_logo.dart';
 import 'gesture_list_screen.dart';
 
 class LearningScreen extends StatefulWidget {
@@ -127,12 +128,19 @@ class _LearningScreenState extends State<LearningScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       elevation: 4,
       centerTitle: true,
-      title: Text(
-        'Learn USL',
-        style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 20),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppLogoMark(size: 28),
+          const SizedBox(width: 10),
+          Text(
+            'Learn USL',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 20),
+          ),
+        ],
       ),
       actions: [
         IconButton(

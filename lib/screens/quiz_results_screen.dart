@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../constants/app_constants.dart';
 import '../models/quiz.dart';
+import '../widgets/app_logo.dart';
 
 class QuizResultsScreen extends StatelessWidget {
   final QuizResult result;
@@ -22,7 +23,14 @@ class QuizResultsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Quiz Results'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Text('Quiz Results'),
+          ],
+        ),
         elevation: 0,
       ),
       body: SingleChildScrollView(
