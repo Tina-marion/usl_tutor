@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
+import '../constants/app_constants.dart';
 import '../models/lesson.dart';
 import '../services/mock_data_service.dart';
 import '../widgets/app_logo.dart';
@@ -111,14 +113,29 @@ class _LearningScreenState extends State<LearningScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredLessons = _getFilteredLessons();
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          _buildCategoryFilters(),
-          Expanded(child: _buildLessonsGrid()),
-        ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).scaffoldBackgroundColor,
+              Theme.of(context).cardColor.withValues(alpha: 0.55),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          children: [
+            _buildHeroPanel(filteredLessons.length),
+            _buildCategoryFilters(),
+            Expanded(child: _buildLessonsGrid(filteredLessons)),
+          ],
+        ),
       ),
     );
   }
@@ -126,7 +143,7 @@ class _LearningScreenState extends State<LearningScreen> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      elevation: 4,
+      elevation: 0,
       centerTitle: true,
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -152,14 +169,107 @@ class _LearningScreenState extends State<LearningScreen> {
     );
   }
 
+  Widget _buildHeroPanel(int visibleLessons) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+        border: Border.all(color: AppConstants.dividerColor),
+        boxShadow: [
+          BoxShadow(
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppConstants.primaryGradient,
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Explore USL lessons',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Pick a category, open a lesson, and start building your sign vocabulary.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${_lessons.length}',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              Text(
+                'lessons',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '$visibleLessons visible',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppConstants.primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.08, end: 0);
+  }
+
   Widget _buildCategoryFilters() {
     final categories = <String>['all', ..._availableCategoryKeys()];
 
     return SizedBox(
-      height: 50,
+      height: 56,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: categories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
@@ -169,31 +279,34 @@ class _LearningScreenState extends State<LearningScreen> {
           return GestureDetector(
             onTap: () => setState(() => _selectedCategory = key),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.green : Theme.of(context).cardColor,
-                gradient: isSelected
-                    ? LinearGradient(
-                        colors: [Colors.green.shade700, Colors.green.shade300])
-                    : null,
-                borderRadius: BorderRadius.circular(20),
+                color: isSelected
+                    ? AppConstants.primaryColor
+                    : Theme.of(context).cardColor,
+                gradient: isSelected ? AppConstants.primaryGradient : null,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.transparent
+                      : AppConstants.dividerColor,
+                ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.26),
-                            blurRadius: 3,
-                            offset: Offset(0, 2))
+                          color:
+                              AppConstants.primaryColor.withValues(alpha: 0.22),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
                       ]
                     : [],
               ),
               child: Text(
                 _categoryLabel(key),
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 13.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: isSelected
                       ? Colors.white
                       : Theme.of(context).colorScheme.onSurface,
@@ -214,28 +327,65 @@ class _LearningScreenState extends State<LearningScreen> {
     return keys.toList();
   }
 
-  Widget _buildLessonsGrid() {
-    var filtered = _selectedCategory == 'all'
-        ? List<Lesson>.from(_lessons)
-        : _lessons
-            .where((l) => _lessonCategoryKey(l) == _selectedCategory)
-            .toList();
-
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered
-          .where((l) =>
-              l.title.toLowerCase().contains(_searchQuery) ||
-              l.description.toLowerCase().contains(_searchQuery))
-          .toList();
+  Widget _buildLessonsGrid(List<Lesson> filtered) {
+    if (filtered.isEmpty) {
+      return Center(
+        child: Container(
+          margin: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+            border: Border.all(color: AppConstants.dividerColor),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppConstants.primaryColor.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.search_off_rounded,
+                  size: 36,
+                  color: AppConstants.primaryColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No lessons found',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Try a different category or search term.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  height: 1.4,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        childAspectRatio: 0.82,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
       ),
       itemCount: filtered.length,
       itemBuilder: (context, index) {
@@ -252,89 +402,151 @@ class _LearningScreenState extends State<LearningScreen> {
   Widget _LessonCard({required Lesson lesson, required VoidCallback onTap}) {
     final progress = lesson.progress.clamp(0.0, 1.0);
     final categoryColor = _getCategoryColor(_lessonCategoryKey(lesson));
-    final screenWidth = MediaQuery.of(context).size.width;
-    final iconSize = screenWidth * 0.25; // Adjusted size for better aesthetics
+    final categoryLabel = _categoryLabel(_lessonCategoryKey(lesson));
+    final progressLabel = progress > 0 ? 'Continue' : 'Start here';
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 200, // Fixed height for consistency
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppConstants.dividerColor),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.07),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              height: 6,
+              height: 5,
               decoration: BoxDecoration(
                 color: categoryColor,
                 borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
             ),
-            const SizedBox(height: 12),
-            Container(
-              width: iconSize,
-              height: iconSize,
-              decoration: BoxDecoration(
-                color: categoryColor.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  lesson.icon,
-                  style: TextStyle(fontSize: 42),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: categoryColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            categoryLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: categoryColor,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          progress > 0 ? Icons.play_circle : Icons.flag_rounded,
+                          size: 18,
+                          color: categoryColor,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 82,
+                      height: 82,
+                      decoration: BoxDecoration(
+                        color: categoryColor.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          lesson.icon,
+                          style: const TextStyle(fontSize: 38),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      lesson.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${lesson.totalSigns} signs',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (progress > 0)
+                      Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 6,
+                              backgroundColor: Theme.of(context)
+                                  .dividerColor
+                                  .withValues(alpha: 0.5),
+                              valueColor: AlwaysStoppedAnimation(categoryColor),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${(progress * 100).toInt()}% complete · $progressLabel',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: categoryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: categoryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '$progressLabel',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: categoryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                lesson.title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${lesson.totalSigns} signs',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (progress > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 6,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor: AlwaysStoppedAnimation(categoryColor),
-                ),
-              )
-            else
-              Text(
-                'Lets get started!',
-                style: TextStyle(
-                    fontSize: 12, color: Color.fromARGB(255, 255, 107, 39)),
-              ),
-            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -344,24 +556,42 @@ class _LearningScreenState extends State<LearningScreen> {
   Color _getCategoryColor(String categoryKey) {
     switch (categoryKey) {
       case 'alphabets':
-        return Colors.blue;
+        return AppConstants.secondaryColor;
       case 'numbers':
-        return Colors.orange;
+        return AppConstants.accentColor;
       case 'greetings':
-        return Colors.green;
+        return AppConstants.successColor;
       case 'family':
-        return Colors.purple;
+        return const Color(0xFF8B5CF6);
       case 'food':
-        return Colors.deepOrange;
+        return const Color(0xFFF97316);
       case 'common phrases':
-        return Colors.teal;
+        return const Color(0xFF14B8A6);
       case 'colors':
-        return Colors.pink;
+        return const Color(0xFFEC4899);
       case 'actions':
-        return Colors.indigo;
+        return const Color(0xFF6366F1);
       default:
-        return Colors.green;
+        return AppConstants.primaryColor;
     }
+  }
+
+  List<Lesson> _getFilteredLessons() {
+    var filtered = _selectedCategory == 'all'
+        ? List<Lesson>.from(_lessons)
+        : _lessons
+            .where((l) => _lessonCategoryKey(l) == _selectedCategory)
+            .toList();
+
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered
+          .where((l) =>
+              l.title.toLowerCase().contains(_searchQuery) ||
+              l.description.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
+
+    return filtered;
   }
 
   void _showSearchDialog() {
