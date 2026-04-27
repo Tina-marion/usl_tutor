@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String userName = 'Learner';
+  String userName = 'Buddy';
   int signsLearnedThisWeek = 12;
   int currentStreak = 7;
   String greeting = 'Hello';
@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     setState(() {
-      userName = profileName.isEmpty ? 'Learner' : profileName;
+      userName = profileName.isEmpty ? 'Buddy' : profileName;
       signsLearnedThisWeek = stats['learnedCount'] as int? ?? 0;
       currentStreak = userProfile.currentStreak;
       level = userProfile.level;

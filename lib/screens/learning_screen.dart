@@ -129,12 +129,19 @@ class _LearningScreenState extends State<LearningScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Column(
-          children: [
-            _buildHeroPanel(filteredLessons.length),
-            _buildCategoryFilters(),
-            Expanded(child: _buildLessonsGrid(filteredLessons)),
-          ],
+        child: SafeArea(
+          top: false,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                  child: _buildHeroPanel(filteredLessons.length)),
+              SliverToBoxAdapter(child: _buildCategoryFilters()),
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 8),
+                sliver: _buildLessonsSliver(filteredLessons),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -327,75 +334,81 @@ class _LearningScreenState extends State<LearningScreen> {
     return keys.toList();
   }
 
-  Widget _buildLessonsGrid(List<Lesson> filtered) {
+  Widget _buildLessonsSliver(List<Lesson> filtered) {
     if (filtered.isEmpty) {
-      return Center(
-        child: Container(
-          margin: const EdgeInsets.all(24),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-            border: Border.all(color: AppConstants.dividerColor),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: AppConstants.primaryColor.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+              border: Border.all(color: AppConstants.dividerColor),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryColor.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.search_off_rounded,
+                    size: 36,
+                    color: AppConstants.primaryColor,
+                  ),
                 ),
-                child: Icon(
-                  Icons.search_off_rounded,
-                  size: 36,
-                  color: AppConstants.primaryColor,
+                const SizedBox(height: 16),
+                Text(
+                  'No lessons found',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No lessons found',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Theme.of(context).colorScheme.onSurface,
+                const SizedBox(height: 8),
+                Text(
+                  'Try a different category or search term.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    height: 1.4,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Try a different category or search term.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  height: 1.4,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.82,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.82,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final lesson = filtered[index];
+            return _LessonCard(
+              lesson: lesson,
+              onTap: () => _onLessonTap(lesson),
+            ).animate().fadeIn(duration: 400.ms);
+          },
+          childCount: filtered.length,
+        ),
       ),
-      itemCount: filtered.length,
-      itemBuilder: (context, index) {
-        final lesson = filtered[index];
-
-        return _LessonCard(
-          lesson: lesson,
-          onTap: () => _onLessonTap(lesson),
-        ).animate().fadeIn(duration: 400.ms);
-      },
     );
   }
 
@@ -427,7 +440,7 @@ class _LearningScreenState extends State<LearningScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              height: 5,
+              height: 4,
               decoration: BoxDecoration(
                 color: categoryColor,
                 borderRadius:
@@ -436,8 +449,9 @@ class _LearningScreenState extends State<LearningScreen> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -467,8 +481,8 @@ class _LearningScreenState extends State<LearningScreen> {
                     ),
                     const SizedBox(height: 12),
                     Container(
-                      width: 82,
-                      height: 82,
+                      width: 62,
+                      height: 62,
                       decoration: BoxDecoration(
                         color: categoryColor.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
@@ -476,31 +490,31 @@ class _LearningScreenState extends State<LearningScreen> {
                       child: Center(
                         child: Text(
                           lesson.icon,
-                          style: const TextStyle(fontSize: 38),
+                          style: const TextStyle(fontSize: 28),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
                       lesson.title,
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 15.5,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 1),
                     Text(
                       '${lesson.totalSigns} signs',
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 11.5,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 8),
                     if (progress > 0)
                       Column(
                         children: [
@@ -519,7 +533,7 @@ class _LearningScreenState extends State<LearningScreen> {
                           Text(
                             '${(progress * 100).toInt()}% complete · $progressLabel',
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 11,
                               color: categoryColor,
                               fontWeight: FontWeight.w600,
                             ),
@@ -537,7 +551,7 @@ class _LearningScreenState extends State<LearningScreen> {
                         child: Text(
                           '$progressLabel',
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 11,
                             color: categoryColor,
                             fontWeight: FontWeight.w600,
                           ),

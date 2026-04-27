@@ -24,6 +24,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
   bool _isProgressReady = false;
   VideoPlayerController? _videoController;
   ChewieController? _chewieController;
+  String? _videoError;
 
   @override
   void initState() {
@@ -34,21 +35,23 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
 
   Future<void> _initializeVideo() async {
     try {
+      _videoError = null;
       _videoController = VideoPlayerController.asset(widget.gesture.videoUrl);
       await _videoController!.initialize();
 
       _chewieController = ChewieController(
         videoPlayerController: _videoController!,
-        autoPlay: false,
+        autoPlay: true,
         looping: true,
         aspectRatio: _videoController!.value.aspectRatio,
         autoInitialize: true,
+        showControlsOnInitialize: true,
         errorBuilder: (context, errorMessage) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 48),
+                const Icon(Icons.error_outline, color: Colors.white, size: 48),
                 const SizedBox(height: 8),
                 Text(
                   'Error loading video',
@@ -65,6 +68,11 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
       }
     } catch (e) {
       debugPrint('Error initializing video: $e');
+      if (mounted) {
+        setState(() {
+          _videoError = 'Unable to load the lesson video.';
+        });
+      }
     }
   }
 
@@ -212,31 +220,45 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
       width: double.infinity,
       height: 300,
       color: Theme.of(context).colorScheme.onSurface,
-      child: _chewieController != null &&
-              _videoController != null &&
-              _videoController!.value.isInitialized
-          ? Chewie(controller: _chewieController!)
-          : Container(
-              color: Colors.grey[900],
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(
-                      color: AppConstants.primaryColor,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Loading video...',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: AppConstants.fontSizeMedium,
-                      ),
-                    ),
-                  ],
+      child: _videoError != null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  _videoError!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: AppConstants.fontSizeMedium,
+                  ),
                 ),
               ),
-            ),
+            )
+          : _chewieController != null &&
+                  _videoController != null &&
+                  _videoController!.value.isInitialized
+              ? Chewie(controller: _chewieController!)
+              : Container(
+                  color: Colors.grey[900],
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(
+                          color: AppConstants.primaryColor,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading video...',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: AppConstants.fontSizeMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
     ).animate().fadeIn(duration: 400.ms);
   }
 

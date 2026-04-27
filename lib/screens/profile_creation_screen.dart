@@ -43,13 +43,16 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
     try {
       final email = _emailController.text.trim();
       final finalEmail = email.isEmpty ? 'learner@usl.com' : email;
+      final enteredName = _nameController.text.trim();
+      final finalName = enteredName.isEmpty ? 'Buddy' : enteredName;
 
       final updatedProfile = _userService.getUserProfile().copyWith(
-            name: _nameController.text.trim(),
+            name: finalName,
             email: finalEmail,
           );
 
       await _userService.updateUser(updatedProfile);
+      await _userService.markProfileComplete();
 
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/onboarding');
@@ -148,10 +151,8 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                         ),
                       ),
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        if (value.trim().length < 2) {
+                        final trimmed = value?.trim() ?? '';
+                        if (trimmed.isNotEmpty && trimmed.length < 2) {
                           return 'Name must be at least 2 characters';
                         }
                         return null;

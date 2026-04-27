@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart' as vp;
 
 import '../constants/app_constants.dart';
@@ -179,6 +180,7 @@ class _QuizScreenState extends State<QuizScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: VideoPlayerWidget(
+          key: ValueKey(question.videoUrl),
           videoUrl: question.videoUrl,
         ),
       ),
@@ -302,30 +304,99 @@ class VideoPlayerWidget extends StatefulWidget {
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   vp.VideoPlayerController? _controller;
+  ChewieController? _chewieController;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _controller = vp.VideoPlayerController.asset(widget.videoUrl)
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {});
-          _controller!.play();
-          _controller!.setLooping(true);
-        }
-      });
+    _loadVideo();
+  }
+
+  @override
+  void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoUrl != widget.videoUrl) {
+      _loadVideo();
+    }
+  }
+
+  Future<void> _loadVideo() async {
+    _chewieController?.dispose();
+    _chewieController = null;
+    await _controller?.dispose();
+    _controller = null;
+    _errorMessage = null;
+
+    final controller = vp.VideoPlayerController.asset(widget.videoUrl);
+    _controller = controller;
+
+    try {
+      await controller.initialize();
+      if (!mounted || _controller != controller) return;
+
+      _chewieController = ChewieController(
+        videoPlayerController: controller,
+        autoInitialize: true,
+        autoPlay: true,
+        looping: true,
+        aspectRatio: controller.value.aspectRatio,
+        errorBuilder: (context, errorMessage) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Error loading video',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          );
+        },
+      );
+
+      if (mounted) setState(() {});
+    } catch (_) {
+      if (mounted && _controller == controller) {
+        setState(() {
+          _errorMessage = 'Unable to load quiz video.';
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
+    _chewieController?.dispose();
     _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            _errorMessage!,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
     if (_controller == null || !_controller!.value.isInitialized) {
       return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_chewieController != null) {
+      return Chewie(controller: _chewieController!);
     }
 
     return AspectRatio(

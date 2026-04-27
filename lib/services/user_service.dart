@@ -11,15 +11,25 @@ class UserService {
   static const String _userCurrentStreakKey = 'user_current_streak';
   static const String _userLongestStreakKey = 'user_longest_streak';
   static const String _userLastActiveDateKey = 'user_last_active_date';
+  static const String _profileCompleteKey = 'profile_complete';
 
   late SharedPreferences _prefs;
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    if (_prefs.containsKey(_userNameKey) &&
+        !_prefs.containsKey(_profileCompleteKey)) {
+      final savedName = _prefs.getString(_userNameKey)?.trim() ?? '';
+      if (savedName.isNotEmpty &&
+          savedName != 'USL Learner' &&
+          savedName != 'USL Tutor Learner') {
+        await _prefs.setBool(_profileCompleteKey, true);
+      }
+    }
   }
 
   Future<void> initializeUser({
-    String name = 'USL Learner',
+    String name = 'Buddy',
     String email = 'learner@usl.com',
   }) async {
     if (!_prefs.containsKey(_userNameKey)) {
@@ -33,11 +43,17 @@ class UserService {
         _userJoinedDateKey,
         DateTime.now().toIso8601String(),
       );
+      await _prefs.setBool(_profileCompleteKey, false);
     }
   }
 
   UserProfile getUserProfile() {
-    final name = _prefs.getString(_userNameKey) ?? 'USL Learner';
+    final rawName = _prefs.getString(_userNameKey)?.trim() ?? '';
+    final name = rawName.isEmpty ||
+            rawName == 'USL Learner' ||
+            rawName == 'USL Tutor Learner'
+        ? 'Buddy'
+        : rawName;
     final email = _prefs.getString(_userEmailKey) ?? 'learner@usl.com';
     final level = _prefs.getInt(_userLevelKey) ?? 1;
     final xp = _prefs.getInt(_userXpKey) ?? 0;
@@ -64,7 +80,10 @@ class UserService {
   }
 
   Future<void> updateUser(UserProfile user) async {
-    await _prefs.setString(_userNameKey, user.name);
+    await _prefs.setString(
+      _userNameKey,
+      user.name.trim().isEmpty ? 'Buddy' : user.name.trim(),
+    );
     await _prefs.setString(_userEmailKey, user.email);
     await _prefs.setInt(_userLevelKey, user.level);
     await _prefs.setInt(_userXpKey, user.xp);
@@ -78,6 +97,14 @@ class UserService {
     } else {
       await _prefs.remove(_userLastActiveDateKey);
     }
+  }
+
+  Future<void> markProfileComplete() async {
+    await _prefs.setBool(_profileCompleteKey, true);
+  }
+
+  bool isProfileComplete() {
+    return _prefs.getBool(_profileCompleteKey) ?? false;
   }
 
   Future<void> updateStreakData({
@@ -121,5 +148,6 @@ class UserService {
     await _prefs.remove(_userCurrentStreakKey);
     await _prefs.remove(_userLongestStreakKey);
     await _prefs.remove(_userLastActiveDateKey);
+    await _prefs.remove(_profileCompleteKey);
   }
 }

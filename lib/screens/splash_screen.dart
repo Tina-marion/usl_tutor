@@ -27,8 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    final user = _userService.getUserProfile();
-    if (user.name == 'USL Learner') {
+    if (!_userService.isProfileComplete()) {
       Navigator.pushReplacementNamed(context, '/profile-creation');
     } else {
       Navigator.pushReplacementNamed(

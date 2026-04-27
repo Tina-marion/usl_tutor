@@ -49,14 +49,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final enteredName = _nameController.text.trim();
+      final finalName = enteredName.isEmpty ? 'Buddy' : enteredName;
       await _userService.updateUser(
         widget.user.copyWith(
-          name: _nameController.text.trim(),
+          name: finalName,
           email: _emailController.text.trim().isEmpty
               ? 'learner@usl.com'
               : _emailController.text.trim(),
         ),
       );
+      await _userService.markProfileComplete();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -154,10 +157,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  if (value.trim().length < 2) {
+                  final trimmed = value?.trim() ?? '';
+                  if (trimmed.isNotEmpty && trimmed.length < 2) {
                     return 'Name must be at least 2 characters';
                   }
                   return null;
