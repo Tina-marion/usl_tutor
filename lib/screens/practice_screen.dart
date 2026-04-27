@@ -576,13 +576,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final mode in _practiceModes)
-                  SizedBox(
-                    width: 156,
+            SizedBox(
+              height: 62,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.zero,
+                physics: const ClampingScrollPhysics(),
+                itemCount: _practiceModes.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final mode = _practiceModes[index];
+                  return SizedBox(
+                    width: 172,
                     child: OutlinedButton.icon(
                       onPressed: () => _selectMode(mode),
                       icon: Icon(_practiceModeIcon(mode)),
@@ -591,11 +596,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         foregroundColor: AppConstants.primaryColor,
                         side:
                             const BorderSide(color: AppConstants.dividerColor),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        alignment: Alignment.centerLeft,
                       ),
                     ),
-                  ),
-              ],
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -677,38 +684,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
         child: Column(
           children: [
             _buildModePanel(),
-            if (_activeGesture != null)
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: _panelDecoration,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Current: ${_activeGesture!.name}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    if (_isModePractice && _practiceGestures.isNotEmpty)
-                      Text(
-                        '${_currentGestureIndex + 1}/${_practiceGestures.length}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
             Expanded(
               child: Container(
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                 decoration: BoxDecoration(
                   color: AppConstants.cardColor,
                   borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
@@ -718,6 +696,54 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 child: shouldShowCameraArea
                     ? Stack(
                         children: [
+                          if (_activeGesture != null)
+                            Positioned(
+                              top: 10,
+                              left: 10,
+                              right: 10,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surface
+                                      .withValues(alpha: 0.78),
+                                  borderRadius: BorderRadius.circular(
+                                    AppConstants.radiusMedium,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Current: ${_activeGesture!.name}',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    if (_isModePractice &&
+                                        _practiceGestures.isNotEmpty)
+                                      Text(
+                                        '${_currentGestureIndex + 1}/${_practiceGestures.length}',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
                           // Camera preview
                           if (_isCameraInitialized && _cameraController != null)
                             SizedBox.expand(
@@ -791,11 +817,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               _videoController != null &&
                               _videoController!.value.isInitialized)
                             Positioned(
-                              top: 14,
-                              right: 14,
+                              top: 10,
+                              right: 10,
                               child: Container(
-                                width: 108,
-                                height: 145,
+                                width: 140,
+                                height: 188,
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: AppConstants.primaryColor,

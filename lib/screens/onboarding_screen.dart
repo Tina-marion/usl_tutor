@@ -114,7 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/dp.png',
+                    'assets/DP.jpeg',
                     fit: BoxFit.cover,
                   ),
                 ),

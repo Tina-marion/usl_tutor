@@ -33,7 +33,7 @@ class AppLogoMark extends StatelessWidget {
       ),
       child: ClipOval(
         child: Image.asset(
-          'assets/dp.png',
+          'assets/DP.jpeg',
           fit: BoxFit.cover,
         ),
       ),
