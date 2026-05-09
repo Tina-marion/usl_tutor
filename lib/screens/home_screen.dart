@@ -441,7 +441,7 @@ class _DailyChallengeCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onStartChallenge,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstants.primaryColor,
+                backgroundColor: const Color.fromARGB(255, 250, 150, 11),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
