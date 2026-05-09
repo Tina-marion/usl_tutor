@@ -48,7 +48,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A2E),
+      backgroundColor: const Color.fromARGB(255, 73, 90, 75),
       body: SafeArea(
         child: Column(
           children: [
@@ -220,7 +220,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         onPressed: _nextPage,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF0A0A2E),
+          foregroundColor: const Color.fromARGB(255, 62, 75, 63),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(40),
           ),
