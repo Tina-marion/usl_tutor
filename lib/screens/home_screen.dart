@@ -135,10 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
             'USL Tutor',
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.87),
+              color: const Color.fromARGB(255, 15, 118, 110),
               fontSize: 24,
             ),
           ),
