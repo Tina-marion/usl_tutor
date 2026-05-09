@@ -161,7 +161,7 @@ class _LearningScreenState extends State<LearningScreen> {
             'Learn USL',
             style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: const Color.fromARGB(255, 15, 118, 110),
                 fontSize: 20),
           ),
         ],
