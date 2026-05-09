@@ -20,11 +20,14 @@ class LessonCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppConstants.paddingLarge),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 1),
             ),
@@ -74,18 +77,18 @@ class LessonCard extends StatelessWidget {
                     children: [
                       Text(
                         lesson.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: AppConstants.fontSizeLarge,
                           fontWeight: FontWeight.bold,
-                          color: AppConstants.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${lesson.totalSigns} signs',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: AppConstants.fontSizeMedium,
-                          color: AppConstants.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],

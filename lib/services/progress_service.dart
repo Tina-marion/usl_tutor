@@ -1,20 +1,36 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'user_service.dart';
+
 /// Service for persisting user progress, favorites, and stats
 class ProgressService {
   static const String _learnedGesturesKey = 'learned_gestures';
   static const String _masteredGesturesKey = 'mastered_gestures';
   static const String _favoriteGesturesKey = 'favorite_gestures';
   static const String _totalPracticeTimeKey = 'total_practice_time';
+  static const String _totalPracticeSecondsKey = 'total_practice_seconds';
   static const String _dailyStreakKey = 'daily_streak';
   static const String _lastPracticeDateKey = 'last_practice_date';
   static const String _quizScoresKey = 'quiz_scores';
   static const String _activitiesKey = 'activities';
+  static const int _xpPerPracticeMinute = 2;
+  static const int _xpPerGestureLearned = 15;
+  static const int _xpPerGestureMasteredBonus = 20;
+  static const int _xpPerQuizBase = 10;
 
   late SharedPreferences _prefs;
+  final UserService _userService = UserService();
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    await _userService.init();
+
+    // One-time migration from legacy minutes storage to seconds storage.
+    if (!_prefs.containsKey(_totalPracticeSecondsKey) &&
+        _prefs.containsKey(_totalPracticeTimeKey)) {
+      final legacyMinutes = _prefs.getInt(_totalPracticeTimeKey) ?? 0;
+      await _prefs.setInt(_totalPracticeSecondsKey, legacyMinutes * 60);
+    }
   }
 
   // Learned Gestures
@@ -23,6 +39,7 @@ class ProgressService {
     if (!learned.contains(gestureId)) {
       learned.add(gestureId);
       await _prefs.setStringList(_learnedGesturesKey, learned);
+      await _userService.addXp(_xpPerGestureLearned);
       // Log activity
       await addActivity(
         type: 'learned',
@@ -52,6 +69,7 @@ class ProgressService {
     if (!mastered.contains(gestureId)) {
       mastered.add(gestureId);
       await _prefs.setStringList(_masteredGesturesKey, mastered);
+      await _userService.addXp(_xpPerGestureMasteredBonus);
       // Log activity
       await addActivity(
         type: 'mastered',
@@ -91,18 +109,46 @@ class ProgressService {
 
   // Practice Time
   Future<void> addPracticeTime(int minutes) async {
-    final total = getTotalPracticeTime();
-    await _prefs.setInt(_totalPracticeTimeKey, total + minutes);
+    await addPracticeDuration(Duration(minutes: minutes));
+  }
+
+  Future<void> addPracticeDuration(Duration duration) async {
+    final seconds = duration.inSeconds;
+    if (seconds <= 0) {
+      return;
+    }
+
+    final totalSeconds = getTotalPracticeSeconds();
+    await _prefs.setInt(_totalPracticeSecondsKey, totalSeconds + seconds);
+
+    final totalMinutes = ((totalSeconds + seconds) / 60).ceil();
+    await _prefs.setInt(_totalPracticeTimeKey, totalMinutes);
+
+    final loggedMinutes = (seconds / 60).ceil();
+    await _userService.addXp(loggedMinutes * _xpPerPracticeMinute);
     // Log activity
     await addActivity(
       type: 'practiced',
-      title: 'Practiced for $minutes minutes',
+      title: 'Practiced for $loggedMinutes minutes',
     );
     await updateDailyStreak();
   }
 
   int getTotalPracticeTime() {
-    return _prefs.getInt(_totalPracticeTimeKey) ?? 0;
+    final totalSeconds = getTotalPracticeSeconds();
+    if (totalSeconds <= 0) {
+      return 0;
+    }
+    return (totalSeconds / 60).ceil();
+  }
+
+  int getTotalPracticeSeconds() {
+    if (_prefs.containsKey(_totalPracticeSecondsKey)) {
+      return _prefs.getInt(_totalPracticeSecondsKey) ?? 0;
+    }
+
+    final legacyMinutes = _prefs.getInt(_totalPracticeTimeKey) ?? 0;
+    return legacyMinutes * 60;
   }
 
   // Daily Streak
@@ -141,11 +187,94 @@ class ProgressService {
     return dateStr != null ? DateTime.parse(dateStr) : null;
   }
 
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  List<DateTime> _getUniqueActivityDatesDesc() {
+    final uniqueDates = <DateTime>{};
+    for (final activity in getActivities()) {
+      final timestamp = activity['timestamp'];
+      if (timestamp is DateTime) {
+        uniqueDates.add(_dateOnly(timestamp));
+      }
+    }
+
+    final dates = uniqueDates.toList()..sort((a, b) => b.compareTo(a));
+    return dates;
+  }
+
+  int _calculateCurrentStreak(List<DateTime> datesDesc) {
+    if (datesDesc.isEmpty) return 0;
+
+    final today = _dateOnly(DateTime.now());
+    final mostRecent = datesDesc.first;
+    final diffFromToday = today.difference(mostRecent).inDays;
+
+    if (diffFromToday > 1) return 0;
+
+    int streak = 1;
+    DateTime previous = mostRecent;
+
+    for (int i = 1; i < datesDesc.length; i++) {
+      final date = datesDesc[i];
+      if (previous.difference(date).inDays == 1) {
+        streak++;
+        previous = date;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  int _calculateLongestStreak(List<DateTime> datesDesc) {
+    if (datesDesc.isEmpty) return 0;
+
+    final datesAsc = List<DateTime>.from(datesDesc)..sort();
+    int longest = 1;
+    int current = 1;
+
+    for (int i = 1; i < datesAsc.length; i++) {
+      if (datesAsc[i].difference(datesAsc[i - 1]).inDays == 1) {
+        current++;
+      } else {
+        current = 1;
+      }
+      if (current > longest) longest = current;
+    }
+
+    return longest;
+  }
+
+  Future<Map<String, dynamic>> recalculateStreakFromActivities() async {
+    final datesDesc = _getUniqueActivityDatesDesc();
+    final currentStreak = _calculateCurrentStreak(datesDesc);
+    final longestStreak = _calculateLongestStreak(datesDesc);
+    final lastActiveDate = datesDesc.isNotEmpty ? datesDesc.first : null;
+
+    await _prefs.setInt(_dailyStreakKey, currentStreak);
+    if (lastActiveDate != null) {
+      await _prefs.setString(
+          _lastPracticeDateKey, lastActiveDate.toIso8601String());
+    } else {
+      await _prefs.remove(_lastPracticeDateKey);
+    }
+
+    return {
+      'currentStreak': currentStreak,
+      'longestStreak': longestStreak,
+      'lastActiveDate': lastActiveDate,
+    };
+  }
+
   // Quiz Scores
   Future<void> saveQuizScore(String lessonId, int score) async {
     final scores = getQuizScores();
     scores[lessonId] = score;
     await _prefs.setString(_quizScoresKey, _encodeMap(scores));
+    final xpEarned = _xpPerQuizBase + (score ~/ 10);
+    await _userService.addXp(xpEarned);
     // Log activity
     await addActivity(
       type: 'quiz',
@@ -306,19 +435,19 @@ class ProgressService {
     final activities = getActivities();
     final now = DateTime.now();
     final weekAgo = now.subtract(const Duration(days: 7));
-    
+
     // Initialize with 0 for each day (Mon-Sun)
     final dailyProgress = <int>[0, 0, 0, 0, 0, 0, 0];
-    
+
     // Count learning activities per day
     for (final activity in activities) {
       final timestamp = activity['timestamp'] as DateTime;
-      
+
       // Only count activities from the last 7 days
       if (timestamp.isAfter(weekAgo) && timestamp.isBefore(now)) {
         // Get day of week (0 = Monday, 6 = Sunday)
         final dayOfWeek = timestamp.weekday - 1;
-        
+
         // Count learned, mastered, and practiced activities
         final type = activity['type'] as String;
         if (type == 'learned' || type == 'mastered' || type == 'practiced') {
@@ -326,7 +455,7 @@ class ProgressService {
         }
       }
     }
-    
+
     return dailyProgress;
   }
 }

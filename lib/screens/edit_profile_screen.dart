@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../models/user.dart';
 import '../services/user_service.dart';
+import '../widgets/app_logo.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final UserProfile user;
@@ -48,14 +49,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final enteredName = _nameController.text.trim();
+      final finalName = enteredName.isEmpty ? 'Buddy' : enteredName;
       await _userService.updateUser(
         widget.user.copyWith(
-          name: _nameController.text.trim(),
+          name: finalName,
           email: _emailController.text.trim().isEmpty
               ? 'learner@usl.com'
               : _emailController.text.trim(),
         ),
       );
+      await _userService.markProfileComplete();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -79,9 +83,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Text('Edit Profile'),
+          ],
+        ),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -100,7 +111,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     color: AppConstants.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.person,
                     size: 40,
                     color: AppConstants.primaryColor,
@@ -120,7 +131,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: 'Enter your name',
-                  prefixIcon: const Icon(Icons.person),
+                  prefixIcon: Icon(Icons.person),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
@@ -146,10 +157,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  if (value.trim().length < 2) {
+                  final trimmed = value?.trim() ?? '';
+                  if (trimmed.isNotEmpty && trimmed.length < 2) {
                     return 'Name must be at least 2 characters';
                   }
                   return null;
@@ -169,7 +178,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Enter your email',
-                  prefixIcon: const Icon(Icons.email),
+                  prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
@@ -229,7 +238,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                           ),
                         )
-                      : const Text(
+                      : Text(
                           'Save Changes',
                           style: TextStyle(
                             fontSize: 16,
@@ -251,12 +260,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Cancel',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppConstants.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),

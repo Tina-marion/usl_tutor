@@ -1,11 +1,14 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../constants/app_constants.dart';
 import '../models/user.dart';
 import '../screens/edit_profile_screen.dart';
 import '../services/progress_service.dart';
+import '../services/theme_service.dart';
 import '../services/user_service.dart';
+import '../widgets/app_logo.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,6 +23,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic> _stats = {};
   late UserProfile _user;
   bool _isLoading = true;
+
+  Color get _surfaceColor => Theme.of(context).cardColor;
+  Color get _primaryTextColor => Theme.of(context).colorScheme.onSurface;
+  Color get _secondaryTextColor =>
+      Theme.of(context).colorScheme.onSurfaceVariant;
+  Color get _shadowColor {
+    final alpha = Theme.of(context).brightness == Brightness.dark ? 0.30 : 0.05;
+    return Colors.black.withValues(alpha: alpha);
+  }
+
+  String get _avatarInitials {
+    final parts = _user.name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
 
   @override
   void initState() {
@@ -48,13 +72,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Text('My Profile'),
+          ],
+        ),
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Icon(Icons.settings),
             onPressed: _showSettings,
           ),
         ],
@@ -86,11 +116,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surfaceColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: _shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -98,30 +128,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
-            child: const Icon(
-              Icons.person,
-              size: 50,
-              color: AppConstants.primaryColor,
-            ),
+          Stack(
+            children: [
+              Container(
+                width: 104,
+                height: 104,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppConstants.primaryColor,
+                      AppConstants.accentColor,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppConstants.primaryColor.withValues(alpha: 0.28),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    _avatarInitials,
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 2,
+                bottom: 2,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: AppConstants.successColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppConstants.paddingMedium),
           Text(
             _user.name,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppConstants.textPrimary,
+              color: _primaryTextColor,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             _user.email.isNotEmpty ? _user.email : 'No email set',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: AppConstants.textSecondary,
+              color: _secondaryTextColor,
             ),
           ),
           const SizedBox(height: AppConstants.paddingMedium),
@@ -141,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Text(
                       'Level ${_user.level}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: AppConstants.primaryColor,
@@ -170,9 +246,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${_user.xp}/${_user.xpForNextLevel} XP',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppConstants.textSecondary,
+                    color: _secondaryTextColor,
                   ),
                 ),
               ],
@@ -191,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.local_fire_department,
                   size: 18,
                   color: AppConstants.warningColor,
@@ -199,8 +275,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(width: 4),
                 Text(
                   '${_stats['dailyStreak'] ?? 0} day streak',
-                  style: const TextStyle(
-                    color: AppConstants.textPrimary,
+                  style: TextStyle(
+                    color: _primaryTextColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -213,8 +289,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _editProfile,
-              icon: const Icon(Icons.edit),
-              label: const Text('Edit Profile'),
+              icon: Icon(Icons.edit),
+              label: Text('Edit Profile'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppConstants.primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -271,11 +347,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surfaceColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: _shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -296,9 +372,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: AppConstants.fontSizeSmall,
-              color: AppConstants.textSecondary,
+              color: _secondaryTextColor,
             ),
           ),
         ],
@@ -308,21 +384,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProgressChart() {
     final values = _progressService.getWeeklyProgress();
-    
+
     // Calculate max Y value dynamically
-    final maxValue = values.isNotEmpty 
-        ? values.reduce((a, b) => a > b ? a : b)
-        : 1;
+    final maxValue =
+        values.isNotEmpty ? values.reduce((a, b) => a > b ? a : b) : 1;
     final maxY = (maxValue + 1).toDouble();
 
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surfaceColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: _shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -331,12 +406,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Weekly Progress',
             style: TextStyle(
               fontSize: AppConstants.fontSizeLarge,
               fontWeight: FontWeight.bold,
-              color: AppConstants.textPrimary,
+              color: _primaryTextColor,
             ),
           ),
           const SizedBox(height: AppConstants.paddingLarge),
@@ -364,7 +439,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ];
                         return Text(
                           days[value.toInt() % 7],
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 12),
                         );
                       },
                     ),
@@ -376,7 +451,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 12),
                         );
                       },
                     ),
@@ -435,11 +510,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surfaceColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: _shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -448,12 +523,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Achievements',
             style: TextStyle(
               fontSize: AppConstants.fontSizeLarge,
               fontWeight: FontWeight.bold,
-              color: AppConstants.textPrimary,
+              color: _primaryTextColor,
             ),
           ),
           const SizedBox(height: AppConstants.paddingMedium),
@@ -477,7 +552,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       achievement['icon'] as IconData,
                       color: isUnlocked
                           ? AppConstants.warningColor
-                          : AppConstants.textSecondary,
+                          : _secondaryTextColor,
                       size: 28,
                     ),
                   ),
@@ -491,22 +566,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: isUnlocked
-                                ? AppConstants.textPrimary
-                                : AppConstants.textSecondary,
+                                ? _primaryTextColor
+                                : _secondaryTextColor,
                           ),
                         ),
                         Text(
                           achievement['desc'] as String,
                           style: TextStyle(
                             fontSize: AppConstants.fontSizeSmall,
-                            color: AppConstants.textSecondary,
+                            color: _secondaryTextColor,
                           ),
                         ),
                       ],
                     ),
                   ),
                   if (isUnlocked)
-                    const Icon(
+                    Icon(
                       Icons.check_circle,
                       color: AppConstants.accentColor,
                     ),
@@ -541,44 +616,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.notifications),
-              title: const Text('Notifications'),
+              leading: Icon(Icons.notifications),
+              title: Text('Notifications'),
               trailing: Switch(
                 value: true,
                 onChanged: (value) {},
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.dark_mode),
-              title: const Text('Dark Mode'),
-              trailing: Switch(
-                value: false,
-                onChanged: (value) {},
+              leading: Icon(Icons.dark_mode),
+              title: Text('Dark Mode'),
+              trailing: Consumer<ThemeService>(
+                builder: (context, themeService, child) {
+                  return Switch(
+                    value: themeService.isDarkMode,
+                    onChanged: (value) {
+                      themeService.setDarkMode(value);
+                    },
+                  );
+                },
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.delete_forever,
-                  color: AppConstants.errorColor),
-              title: const Text('Reset Progress',
+              leading:
+                  Icon(Icons.delete_forever, color: AppConstants.errorColor),
+              title: Text('Reset Progress',
                   style: TextStyle(color: AppConstants.errorColor)),
               onTap: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Reset Progress?'),
-                    content: const Text(
+                    title: Text('Reset Progress?'),
+                    content: Text(
                         'This will delete all your progress. This action cannot be undone.'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
+                        child: Text('Cancel'),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context, true),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppConstants.errorColor,
                         ),
-                        child: const Text('Reset'),
+                        child: Text('Reset'),
                       ),
                     ],
                   ),
@@ -599,27 +680,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.logout, color: AppConstants.errorColor),
-              title: const Text('Logout',
+              leading: Icon(Icons.logout, color: AppConstants.errorColor),
+              title: Text('Logout',
                   style: TextStyle(color: AppConstants.errorColor)),
               onTap: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Logout?'),
-                    content: const Text(
+                    title: Text('Logout?'),
+                    content: Text(
                         'You will need to create a new profile when you log back in.'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
+                        child: Text('Cancel'),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context, true),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppConstants.errorColor,
                         ),
-                        child: const Text('Logout'),
+                        child: Text('Logout'),
                       ),
                     ],
                   ),

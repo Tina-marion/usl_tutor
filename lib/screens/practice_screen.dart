@@ -2,16 +2,24 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
-import '../services/inference_service.dart';
 import '../services/mock_data_service.dart';
 import '../services/progress_service.dart';
+import '../widgets/app_logo.dart';
 
-enum PracticeMode { numbers, alphabets }
+enum PracticeMode {
+  numbers,
+  alphabets,
+  greetings,
+  family,
+  food,
+  commonPhrases,
+}
 
 class PracticeScreen extends StatefulWidget {
   final GestureModel? gesture;
@@ -25,14 +33,18 @@ class PracticeScreen extends StatefulWidget {
 class _PracticeScreenState extends State<PracticeScreen> {
   CameraController? _cameraController;
   VideoPlayerController? _videoController;
+  ChewieController? _chewieController;
   bool _isCameraInitialized = false;
   bool _isRecording = false;
   bool _isUploading = false;
   int _countdown = 0;
   Timer? _countdownTimer;
+  DateTime? _recordingStartedAt;
   String? _feedback;
   String? _translation;
+  String? _videoError;
   final _progressService = ProgressService();
+  bool _isProgressReady = false;
   PracticeMode? _selectedMode;
   List<GestureModel> _practiceGestures = [];
   int _currentGestureIndex = 0;
@@ -49,16 +61,76 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   bool get _isModePractice => widget.gesture == null;
 
+  List<PracticeMode> get _practiceModes => const [
+        PracticeMode.numbers,
+        PracticeMode.alphabets,
+        PracticeMode.greetings,
+        PracticeMode.family,
+        PracticeMode.food,
+        PracticeMode.commonPhrases,
+      ];
+
   String get _selectedModeLabel =>
-      _selectedMode == PracticeMode.numbers ? 'Numbers' : 'Alphabets';
+      _selectedMode == null ? 'Practice' : _practiceModeLabel(_selectedMode!);
+
+  String _practiceModeLabel(PracticeMode mode) {
+    switch (mode) {
+      case PracticeMode.numbers:
+        return 'Numbers';
+      case PracticeMode.alphabets:
+        return 'Alphabets';
+      case PracticeMode.greetings:
+        return 'Greetings';
+      case PracticeMode.family:
+        return 'Family';
+      case PracticeMode.food:
+        return 'Food';
+      case PracticeMode.commonPhrases:
+        return 'Common Phrases';
+    }
+  }
+
+  String _practiceModeKey(PracticeMode mode) {
+    switch (mode) {
+      case PracticeMode.numbers:
+        return 'numbers';
+      case PracticeMode.alphabets:
+        return 'letters';
+      case PracticeMode.greetings:
+        return 'greetings';
+      case PracticeMode.family:
+        return 'family';
+      case PracticeMode.food:
+        return 'food';
+      case PracticeMode.commonPhrases:
+        return 'common phrases';
+    }
+  }
+
+  IconData _practiceModeIcon(PracticeMode mode) {
+    switch (mode) {
+      case PracticeMode.numbers:
+        return Icons.pin;
+      case PracticeMode.alphabets:
+        return Icons.sort_by_alpha;
+      case PracticeMode.greetings:
+        return Icons.waving_hand;
+      case PracticeMode.family:
+        return Icons.family_restroom;
+      case PracticeMode.food:
+        return Icons.restaurant;
+      case PracticeMode.commonPhrases:
+        return Icons.chat_bubble_outline;
+    }
+  }
 
   BoxDecoration get _panelDecoration => BoxDecoration(
         color: AppConstants.cardColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         border: Border.all(color: AppConstants.dividerColor),
       );
-      
-        get InferenceService => null;
+
+  get InferenceService => null;
 
   @override
   void initState() {
@@ -67,26 +139,59 @@ class _PracticeScreenState extends State<PracticeScreen> {
     if (widget.gesture != null) {
       _initializeVideo();
     }
-    _progressService.init();
+    _initializeProgress();
+  }
+
+  Future<void> _initializeProgress() async {
+    await _progressService.init();
+    if (!mounted) return;
+    setState(() {
+      _isProgressReady = true;
+    });
   }
 
   Future<void> _initializeVideo() async {
     final gesture = _activeGesture;
     if (gesture != null && gesture.videoUrl.isNotEmpty) {
       try {
+        _chewieController?.dispose();
+        _chewieController = null;
         await _videoController?.dispose();
+        _videoError = null;
         _videoController = VideoPlayerController.asset(gesture.videoUrl);
         await _videoController!.initialize();
-        // Loop the video
-        await _videoController!.setLooping(true);
-        // Start playing
-        await _videoController!.play();
+        _chewieController = ChewieController(
+          videoPlayerController: _videoController!,
+          autoInitialize: true,
+          autoPlay: true,
+          looping: true,
+          aspectRatio: _videoController!.value.aspectRatio,
+          showControlsOnInitialize: true,
+          errorBuilder: (context, errorMessage) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  'Error loading video',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
         if (mounted) {
           setState(() {});
         }
       } catch (e) {
-        // Video loading failed, continue without it
         print('Video loading error: $e');
+        if (mounted) {
+          setState(() {
+            _videoError = 'Unable to load video.';
+          });
+        }
       }
     }
   }
@@ -96,18 +201,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
         .where((g) => g.videoUrl.isNotEmpty)
         .toList();
 
-    final numbers = allWithVideos
-        .where((g) => g.category.toLowerCase() == 'numbers')
+    final selected = allWithVideos
+        .where((g) => g.category.toLowerCase() == _practiceModeKey(mode))
         .toList();
-    final alphabets = allWithVideos
-        .where(
-          (g) =>
-              g.category.toLowerCase() == 'letters' ||
-              g.category.toLowerCase() == 'alphabets',
-        )
-        .toList();
-
-    final selected = mode == PracticeMode.numbers ? numbers : alphabets;
     selected.sort((a, b) => a.name.compareTo(b.name));
     return selected;
   }
@@ -199,6 +295,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void dispose() {
     _countdownTimer?.cancel();
     _cameraController?.dispose();
+    _chewieController?.dispose();
     _videoController?.dispose();
     super.dispose();
   }
@@ -241,6 +338,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _countdown = 0;
       _translation = null;
     });
+    _recordingStartedAt = DateTime.now();
 
     _cameraController!
         .startVideoRecording()
@@ -264,7 +362,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
       });
 
       final translation = await InferenceService.translateVideo(localFile);
-      await _progressService.addPracticeTime(1);
+      final startedAt = _recordingStartedAt;
+      if (startedAt != null) {
+        await _progressService
+            .addPracticeDuration(DateTime.now().difference(startedAt));
+      }
 
       setState(() {
         _translation = translation;
@@ -275,6 +377,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
         _feedback = 'Processing error: $e';
       });
     } finally {
+      _recordingStartedAt = null;
       setState(() {
         _isUploading = false;
       });
@@ -285,10 +388,43 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
   }
 
+  Future<void> _markActiveGestureAsLearned() async {
+    final activeGesture = _activeGesture;
+    if (!_isProgressReady || activeGesture == null) {
+      return;
+    }
+
+    await _progressService.markGestureAsLearned(activeGesture.id);
+
+    if (!mounted) return;
+    Navigator.pop(context);
+    if (widget.gesture != null) {
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _markActiveGestureAsMastered() async {
+    final activeGesture = _activeGesture;
+    if (!_isProgressReady || activeGesture == null) {
+      return;
+    }
+
+    await _progressService.markGestureAsMastered(activeGesture.id);
+
+    if (!mounted) return;
+    Navigator.pop(context);
+    if (widget.gesture != null) {
+      Navigator.pop(context);
+    }
+  }
+
   void _showResultDialog() {
     final bool hasTranslation =
         _translation != null && _translation!.isNotEmpty;
     final String gestureExpected = _activeGesture?.name ?? 'sign';
+    final bool isExactMatch = hasTranslation &&
+        _activeGesture != null &&
+        _translation!.toLowerCase() == gestureExpected.toLowerCase();
 
     showDialog<void>(
       context: context,
@@ -302,7 +438,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   : AppConstants.accentColor,
             ),
             const SizedBox(width: 8),
-            const Text('Practice Complete!'),
+            Text('Practice Complete!'),
           ],
         ),
         content: Column(
@@ -312,7 +448,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
             if (_activeGesture != null) ...[
               Text(
                 'Expected: $gestureExpected',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -320,7 +456,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               const SizedBox(height: 12),
             ],
             if (hasTranslation) ...[
-              const Text(
+              Text(
                 'You signed:',
                 style: TextStyle(
                   fontSize: 14,
@@ -336,7 +472,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ),
                 child: Text(
                   _translation!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                     color: AppConstants.primaryColor,
@@ -377,37 +513,34 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         ],
                       ),
             ] else ...[
-              const Text(
+              Text(
                 'Could not detect sign. Please try again with:',
                 style: TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 8),
-              const Text('• Better lighting'),
-              const Text('• Clear hand movements'),
-              const Text('• Proper camera position'),
+              Text('• Better lighting'),
+              Text('• Clear hand movements'),
+              Text('• Proper camera position'),
             ],
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Practice Again'),
+            child: Text('Practice Again'),
           ),
+          if (_activeGesture != null && isExactMatch)
+            TextButton(
+              onPressed: _isProgressReady ? _markActiveGestureAsMastered : null,
+              child: Text('Mark as Mastered'),
+            ),
           if (_activeGesture != null && hasTranslation)
             ElevatedButton(
-              onPressed: () async {
-                await _progressService.markGestureAsLearned(_activeGesture!.id);
-                if (mounted) {
-                  Navigator.pop(context);
-                  if (widget.gesture != null) {
-                    Navigator.pop(context);
-                  }
-                }
-              },
+              onPressed: _isProgressReady ? _markActiveGestureAsLearned : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppConstants.primaryColor,
               ),
-              child: const Text('Mark as Learned'),
+              child: Text('Mark as Learned'),
             ),
         ],
       ),
@@ -428,46 +561,48 @@ class _PracticeScreenState extends State<PracticeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Hey!!! Ready to practice some USL?',
               style: TextStyle(
-                color: AppConstants.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: AppConstants.fontSizeLarge,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Choose what to practice..',
-              style: TextStyle(color: AppConstants.textSecondary),
+            Text(
+              'Choose a category to start.',
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _selectMode(PracticeMode.alphabets),
-                    icon: const Icon(Icons.sort_by_alpha),
-                    label: const Text('Alphabets'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppConstants.primaryColor,
-                      side: const BorderSide(color: AppConstants.dividerColor),
+            SizedBox(
+              height: 62,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.zero,
+                physics: const ClampingScrollPhysics(),
+                itemCount: _practiceModes.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final mode = _practiceModes[index];
+                  return SizedBox(
+                    width: 172,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _selectMode(mode),
+                      icon: Icon(_practiceModeIcon(mode)),
+                      label: Text(_practiceModeLabel(mode)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppConstants.primaryColor,
+                        side:
+                            const BorderSide(color: AppConstants.dividerColor),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        alignment: Alignment.centerLeft,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _selectMode(PracticeMode.numbers),
-                    icon: const Icon(Icons.pin),
-                    label: const Text('Numbers'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppConstants.primaryColor,
-                      side: const BorderSide(color: AppConstants.dividerColor),
-                    ),
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -484,8 +619,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
         children: [
           Text(
             'Mode: $_selectedModeLabel',
-            style: const TextStyle(
-              color: AppConstants.textPrimary,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -496,8 +631,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
             children: [
               OutlinedButton.icon(
                 onPressed: _changeMode,
-                icon: const Icon(Icons.swap_horiz, size: 18),
-                label: const Text('Change Mode'),
+                icon: Icon(Icons.swap_horiz, size: 18),
+                label: Text('Change Mode'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppConstants.primaryColor,
                   side: const BorderSide(color: AppConstants.dividerColor),
@@ -506,8 +641,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
               if (_practiceGestures.isNotEmpty)
                 OutlinedButton.icon(
                   onPressed: _showNextGesture,
-                  icon: const Icon(Icons.skip_next, size: 18),
-                  label: const Text('Next Video'),
+                  icon: Icon(Icons.skip_next, size: 18),
+                  label: Text('Next Video'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppConstants.primaryColor,
                     side: const BorderSide(color: AppConstants.dividerColor),
@@ -527,276 +662,346 @@ class _PracticeScreenState extends State<PracticeScreen> {
         _isCameraInitialized && !_isUploading && _activeGesture != null;
 
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        foregroundColor: AppConstants.textPrimary,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
-        title: Text(
-          _activeGesture != null
-              ? 'Practice: ${_activeGesture!.name}'
-              : 'Practice Mode',
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Text(
+              _activeGesture != null
+                  ? 'Practice: ${_activeGesture!.name}'
+                  : 'Practice Mode',
+            ),
+          ],
         ),
       ),
-      body: Column(
-        children: [
-          _buildModePanel(),
-          if (_activeGesture != null)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: _panelDecoration,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Current: ${_activeGesture!.name}',
-                      style: const TextStyle(
-                        color: AppConstants.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  if (_isModePractice && _practiceGestures.isNotEmpty)
-                    Text(
-                      '${_currentGestureIndex + 1}/${_practiceGestures.length}',
-                      style: const TextStyle(
-                        color: AppConstants.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              decoration: BoxDecoration(
-                color: AppConstants.cardColor,
-                borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-                border: Border.all(color: AppConstants.dividerColor),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: shouldShowCameraArea
-                  ? Stack(
-                      children: [
-                        // Camera preview
-                        if (_isCameraInitialized && _cameraController != null)
-                          SizedBox.expand(
-                            child: FittedBox(
-                              fit: BoxFit.cover,
-                              child: SizedBox(
-                                width: _cameraController!
-                                    .value.previewSize!.height,
-                                height:
-                                    _cameraController!.value.previewSize!.width,
-                                child: CameraPreview(_cameraController!),
-                              ),
-                            ),
-                          )
-                        else
-                          Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const CircularProgressIndicator(),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _feedback ?? 'Initializing camera...',
-                                  style: const TextStyle(
-                                      color: AppConstants.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                        if (_countdown > 0)
-                          Container(
-                            color: Colors.black54,
-                            child: Center(
-                              child: Text(
-                                _countdown.toString(),
-                                style: const TextStyle(
-                                  fontSize: 100,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        if (_videoController != null &&
-                            _videoController!.value.isInitialized)
-                          Positioned(
-                            top: 14,
-                            right: 14,
-                            child: Container(
-                              width: 108,
-                              height: 145,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: AppConstants.primaryColor,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.radiusSmall),
-                                color: Colors.black,
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.radiusSmall),
-                                child: AspectRatio(
-                                  aspectRatio:
-                                      _videoController!.value.aspectRatio,
-                                  child: VideoPlayer(_videoController!),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        if (_isRecording)
-                          Positioned(
-                            top: 14,
-                            left: 0,
-                            right: 0,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Recording...',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                        if (_activeGesture != null &&
-                            !_isRecording &&
-                            _countdown == 0)
-                          Positioned(
-                            bottom: 14,
-                            left: 14,
-                            right: 14,
-                            child: Container(
-                              padding: const EdgeInsets.all(
-                                  AppConstants.paddingMedium),
-                              decoration: BoxDecoration(
-                                color: Colors.black87,
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.radiusMedium),
-                              ),
-                              child: Text(
-                                _activeGesture!.instructions.first,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: AppConstants.fontSizeSmall,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    )
-                  : Center(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: const EdgeInsets.all(16),
-                        decoration: _panelDecoration,
-                        child: const Text(
-                          'Select a practice mode above to activate the camera.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppConstants.textSecondary,
-                            fontSize: AppConstants.fontSizeNormal,
-                          ),
-                        ),
-                      ),
-                    ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            padding: const EdgeInsets.all(12),
-            decoration: _panelDecoration,
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_feedback != null)
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color:
-                            AppConstants.primaryColor.withValues(alpha: 0.08),
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusSmall),
-                      ),
-                      child: Text(
-                        _feedback!,
-                        style: const TextStyle(
-                          color: AppConstants.accentColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  if (_isUploading)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildModePanel(),
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                decoration: BoxDecoration(
+                  color: AppConstants.cardColor,
+                  borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                  border: Border.all(color: AppConstants.dividerColor),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: shouldShowCameraArea
+                    ? Stack(
                         children: [
-                          SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 3),
+                          if (_activeGesture != null)
+                            Positioned(
+                              top: 10,
+                              left: 10,
+                              right: 10,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surface
+                                      .withValues(alpha: 0.78),
+                                  borderRadius: BorderRadius.circular(
+                                    AppConstants.radiusMedium,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Current: ${_activeGesture!.name}',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    if (_isModePractice &&
+                                        _practiceGestures.isNotEmpty)
+                                      Text(
+                                        '${_currentGestureIndex + 1}/${_practiceGestures.length}',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                          // Camera preview
+                          if (_isCameraInitialized && _cameraController != null)
+                            SizedBox.expand(
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: _cameraController!
+                                      .value.previewSize!.height,
+                                  height: _cameraController!
+                                      .value.previewSize!.width,
+                                  child: CameraPreview(_cameraController!),
+                                ),
+                              ),
+                            )
+                          else
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const CircularProgressIndicator(),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _feedback ?? 'Initializing camera...',
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          if (_countdown > 0)
+                            Container(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.54),
+                              child: Center(
+                                child: Text(
+                                  _countdown.toString(),
+                                  style: TextStyle(
+                                    fontSize: 100,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          if (_videoError != null)
+                            Positioned.fill(
+                              child: Container(
+                                color: Colors.black87,
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Text(
+                                      _videoError!,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          else if (_chewieController != null &&
+                              _videoController != null &&
+                              _videoController!.value.isInitialized)
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: Container(
+                                width: 140,
+                                height: 188,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppConstants.primaryColor,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                      AppConstants.radiusSmall),
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                      AppConstants.radiusSmall),
+                                  child: Chewie(controller: _chewieController!),
+                                ),
+                              ),
+                            ),
+
+                          if (_isRecording)
+                            Positioned(
+                              top: 14,
+                              left: 0,
+                              right: 0,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Recording...',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          if (_activeGesture != null &&
+                              !_isRecording &&
+                              _countdown == 0)
+                            Positioned(
+                              bottom: 14,
+                              left: 14,
+                              right: 14,
+                              child: Container(
+                                padding: const EdgeInsets.all(
+                                    AppConstants.paddingMedium),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.87),
+                                  borderRadius: BorderRadius.circular(
+                                      AppConstants.radiusMedium),
+                                ),
+                                child: Text(
+                                  _activeGesture!.instructions.first,
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: AppConstants.fontSizeSmall,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      )
+                    : Center(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.all(16),
+                          decoration: _panelDecoration,
+                          child: Text(
+                            'Select a practice mode above to activate the camera.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: AppConstants.fontSizeNormal,
+                            ),
                           ),
-                          SizedBox(width: 10),
-                          Text(
-                            'Processing...',
-                            style: TextStyle(color: AppConstants.textSecondary),
+                        ),
+                      ),
+              ),
+            ),
+            Flexible(
+              fit: FlexFit.loose,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: _panelDecoration,
+                  child: SafeArea(
+                    top: false,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_feedback != null)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppConstants.primaryColor
+                                    .withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(
+                                    AppConstants.radiusSmall),
+                              ),
+                              child: Text(
+                                _feedback!,
+                                style: TextStyle(
+                                  color: AppConstants.accentColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          if (_isUploading)
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 10),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 3),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Processing...',
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isRecording
+                                  ? _stopRecording
+                                  : (canStartPractice ? _startPractice : null),
+                              icon: Icon(
+                                  _isRecording ? Icons.stop : Icons.play_arrow),
+                              label: Text(_isRecording
+                                  ? 'Stop Recording'
+                                  : 'Start Practice'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isRecording
+                                    ? AppConstants.errorColor
+                                    : AppConstants.primaryColor,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isRecording
-                          ? _stopRecording
-                          : (canStartPractice ? _startPractice : null),
-                      icon: Icon(_isRecording ? Icons.stop : Icons.play_arrow),
-                      label: Text(
-                          _isRecording ? 'Stop Recording' : 'Start Practice'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isRecording
-                            ? AppConstants.errorColor
-                            : AppConstants.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                    ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

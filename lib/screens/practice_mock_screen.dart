@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import '../models/gesture.dart';
 import '../services/mock_data_service.dart';
 import '../services/mock_recognition_service.dart';
+import '../services/progress_service.dart';
 import '../constants/app_constants.dart';
 import '../widgets/recognition_feedback_dialog.dart';
 
@@ -30,12 +31,24 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
   double _bestScore = 0.0;
   int _countdown = 0;
   Timer? _countdownTimer;
+  DateTime? _recordingStartedAt;
+  final ProgressService _progressService = ProgressService();
+  bool _isProgressReady = false;
 
   @override
   void initState() {
     super.initState();
     _currentGesture = widget.initialGesture ?? _getRandomGesture();
     _initializeCamera();
+    _initializeProgress();
+  }
+
+  Future<void> _initializeProgress() async {
+    await _progressService.init();
+    if (!mounted) return;
+    setState(() {
+      _isProgressReady = true;
+    });
   }
 
   Future<void> _initializeCamera() async {
@@ -85,6 +98,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
       _isRecording = true;
       _countdown = 3;
     });
+    _recordingStartedAt = DateTime.now();
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdown > 1) {
@@ -104,6 +118,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
       _isRecording = false;
       _countdown = 0;
     });
+    _recordingStartedAt = null;
   }
 
   Future<void> _processGesture() async {
@@ -115,6 +130,13 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
     final result = await _recognitionService.recognizeGesture(
       targetGesture: _currentGesture.name,
     );
+
+    final startedAt = _recordingStartedAt;
+    if (startedAt != null) {
+      await _progressService
+          .addPracticeDuration(DateTime.now().difference(startedAt));
+    }
+    _recordingStartedAt = null;
 
     setState(() {
       _attempts++;
@@ -135,6 +157,22 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
       barrierDismissible: false,
       builder: (context) => RecognitionFeedbackDialog(
         result: result,
+        onMarkLearned: result.isCorrect && _isProgressReady
+            ? () async {
+                await _progressService.markGestureAsLearned(_currentGesture.id);
+                if (!mounted) return;
+                Navigator.pop(context);
+              }
+            : null,
+        onMarkMastered: result.isCorrect && _isProgressReady
+            ? () async {
+                await _progressService
+                    .markGestureAsMastered(_currentGesture.id);
+                if (!mounted) return;
+                Navigator.pop(context);
+                _loadNextGesture();
+              }
+            : null,
         onTryAgain: () {
           Navigator.pop(context);
         },
@@ -165,7 +203,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
               color: AppConstants.warningColor,
             ),
             const SizedBox(width: 8),
-            const Text('Hint'),
+            Text('Hint'),
           ],
         ),
         content: Column(
@@ -174,13 +212,13 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
           children: [
             Text(
               _currentGesture.description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: AppConstants.fontSizeNormal,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Key steps:',
               style: TextStyle(
                 fontSize: AppConstants.fontSizeMedium,
@@ -194,7 +232,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('• '),
+                    Text('• '),
                     Expanded(child: Text(instruction)),
                   ],
                 ),
@@ -205,7 +243,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Got it!'),
+            child: Text('Got it!'),
           ),
         ],
       ),
@@ -222,7 +260,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.onSurface,
       body: SafeArea(
         child: Stack(
           children: [
@@ -308,19 +346,19 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
+              icon: Icon(Icons.close, color: Colors.white),
               onPressed: () => Navigator.pop(context),
             ),
             Text(
               'Practice Mode',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: AppConstants.fontSizeLarge,
                 fontWeight: FontWeight.bold,
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.info_outline, color: Colors.white),
+              icon: Icon(Icons.info_outline, color: Colors.white),
               onPressed: _showHint,
             ),
           ],
@@ -342,7 +380,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -353,13 +391,13 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.sports_score,
                   color: Colors.white,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Target Sign:',
                   style: TextStyle(
                     color: Colors.white,
@@ -371,7 +409,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
             const SizedBox(height: 8),
             Text(
               _currentGesture.name,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -407,7 +445,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: AppConstants.fontSizeLarge,
             fontWeight: FontWeight.bold,
@@ -429,7 +467,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
       child: Container(
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.8),
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
           borderRadius: BorderRadius.circular(20),
         ),
         child: _isProcessing
@@ -445,7 +483,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Analyzing...',
                     style: TextStyle(
                       color: Colors.white,
@@ -459,7 +497,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
                 .shimmer(duration: 1500.ms, color: Colors.white24)
             : Text(
                 _countdown.toString(),
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontSize: 80,
                   fontWeight: FontWeight.bold,
@@ -531,7 +569,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.fiber_manual_record,
                       color: Colors.white,
                       size: 40,
@@ -586,7 +624,7 @@ class _PracticeMockScreenState extends State<PracticeMockScreen> {
         const SizedBox(height: 8),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: AppConstants.fontSizeSmall,
           ),

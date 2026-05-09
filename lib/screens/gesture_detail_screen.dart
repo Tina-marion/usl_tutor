@@ -6,6 +6,7 @@ import 'package:chewie/chewie.dart';
 import '../constants/app_constants.dart';
 import '../models/gesture.dart';
 import '../services/progress_service.dart';
+import '../widgets/app_logo.dart';
 import 'practice_screen.dart';
 
 class GestureDetailScreen extends StatefulWidget {
@@ -20,8 +21,10 @@ class GestureDetailScreen extends StatefulWidget {
 class _GestureDetailScreenState extends State<GestureDetailScreen> {
   final _progressService = ProgressService();
   bool _isFavorite = false;
+  bool _isProgressReady = false;
   VideoPlayerController? _videoController;
   ChewieController? _chewieController;
+  String? _videoError;
 
   @override
   void initState() {
@@ -32,15 +35,17 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
 
   Future<void> _initializeVideo() async {
     try {
+      _videoError = null;
       _videoController = VideoPlayerController.asset(widget.gesture.videoUrl);
       await _videoController!.initialize();
 
       _chewieController = ChewieController(
         videoPlayerController: _videoController!,
-        autoPlay: false,
+        autoPlay: true,
         looping: true,
         aspectRatio: _videoController!.value.aspectRatio,
         autoInitialize: true,
+        showControlsOnInitialize: true,
         errorBuilder: (context, errorMessage) {
           return Center(
             child: Column(
@@ -50,7 +55,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Error loading video',
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.white),
                 ),
               ],
             ),
@@ -63,6 +68,11 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
       }
     } catch (e) {
       debugPrint('Error initializing video: $e');
+      if (mounted) {
+        setState(() {
+          _videoError = 'Unable to load the lesson video.';
+        });
+      }
     }
   }
 
@@ -75,8 +85,10 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
 
   Future<void> _loadFavoriteState() async {
     await _progressService.init();
+    if (!mounted) return;
     setState(() {
       _isFavorite = _progressService.isFavorite(widget.gesture.id);
+      _isProgressReady = true;
     });
   }
 
@@ -99,13 +111,21 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
   }
 
   Future<void> _markAsLearned() async {
+    if (!_isProgressReady) {
+      await _progressService.init();
+      if (!mounted) return;
+      setState(() {
+        _isProgressReady = true;
+      });
+    }
+
     await _progressService.markGestureAsLearned(widget.gesture.id);
 
     if (mounted) {
       showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Great Job! 🎉'),
+          title: Text('Great Job! 🎉'),
           content: Text('You\'ve marked "${widget.gesture.name}" as learned!'),
           actions: [
             TextButton(
@@ -113,7 +133,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
                 Navigator.pop(context);
                 Navigator.pop(context);
               },
-              child: const Text('Continue Learning'),
+              child: Text('Continue Learning'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -123,7 +143,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppConstants.primaryColor,
               ),
-              child: const Text('Practice Now'),
+              child: Text('Practice Now'),
             ),
           ],
         ),
@@ -143,7 +163,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
       body: SingleChildScrollView(
         child: Column(
@@ -166,8 +186,22 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
       backgroundColor: Colors.transparent,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: Icon(Icons.arrow_back),
         onPressed: () => Navigator.pop(context),
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppLogoMark(size: 26),
+          const SizedBox(width: 10),
+          Text(
+            widget.gesture.name,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ],
       ),
       actions: [
         IconButton(
@@ -185,32 +219,46 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
     return Container(
       width: double.infinity,
       height: 300,
-      color: Colors.black,
-      child: _chewieController != null &&
-              _videoController != null &&
-              _videoController!.value.isInitialized
-          ? Chewie(controller: _chewieController!)
-          : Container(
-              color: Colors.grey[900],
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(
-                      color: AppConstants.primaryColor,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Loading video...',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: AppConstants.fontSizeMedium,
-                      ),
-                    ),
-                  ],
+      color: Theme.of(context).colorScheme.onSurface,
+      child: _videoError != null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  _videoError!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: AppConstants.fontSizeMedium,
+                  ),
                 ),
               ),
-            ),
+            )
+          : _chewieController != null &&
+                  _videoController != null &&
+                  _videoController!.value.isInitialized
+              ? Chewie(controller: _chewieController!)
+              : Container(
+                  color: Colors.grey[900],
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(
+                          color: AppConstants.primaryColor,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading video...',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: AppConstants.fontSizeMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
     ).animate().fadeIn(duration: 400.ms);
   }
 
@@ -227,17 +275,17 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
               Expanded(
                 child: Text(
                   widget.gesture.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: AppConstants.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
               _buildDifficultyChip(),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.volume_up),
+                icon: Icon(Icons.volume_up),
                 onPressed: () {
                   // TODO: Text-to-speech.
                 },
@@ -248,17 +296,17 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
           const SizedBox(height: 8),
           Text(
             widget.gesture.category,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: AppConstants.fontSizeMedium,
-              color: AppConstants.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 16),
           Text(
             widget.gesture.description,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: AppConstants.fontSizeNormal,
-              color: AppConstants.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
               height: 1.5,
             ),
           ),
@@ -283,7 +331,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
         color = AppConstants.errorColor;
         break;
       default:
-        color = AppConstants.textSecondary;
+        color = Theme.of(context).colorScheme.onSurfaceVariant;
     }
 
     return Container(
@@ -318,12 +366,12 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
             children: [
               Icon(Icons.list_alt, color: AppConstants.primaryColor, size: 24),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Instructions',
                 style: TextStyle(
                   fontSize: AppConstants.fontSizeLarge,
                   fontWeight: FontWeight.bold,
-                  color: AppConstants.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -347,7 +395,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
                     child: Center(
                       child: Text(
                         '${index + 1}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: AppConstants.fontSizeMedium,
@@ -359,9 +407,9 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
                   Expanded(
                     child: Text(
                       instruction,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: AppConstants.fontSizeNormal,
-                        color: AppConstants.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                         height: 1.5,
                       ),
                     ),
@@ -402,12 +450,12 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
                 size: 24,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Tips',
                 style: TextStyle(
                   fontSize: AppConstants.fontSizeLarge,
                   fontWeight: FontWeight.bold,
-                  color: AppConstants.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -419,7 +467,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '• ',
                     style: TextStyle(
                       fontSize: AppConstants.fontSizeLarge,
@@ -430,9 +478,9 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
                   Expanded(
                     child: Text(
                       tip,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: AppConstants.fontSizeNormal,
-                        color: AppConstants.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                         height: 1.5,
                       ),
                     ),
@@ -456,7 +504,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -467,12 +515,12 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _markAsLearned,
+                onPressed: _isProgressReady ? _markAsLearned : null,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: AppConstants.primaryColor),
                 ),
-                child: const Text(
+                child: Text(
                   '✓ Mark as Learned',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
@@ -491,7 +539,7 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   elevation: 0,
                 ),
-                child: const Text(
+                child: Text(
                   '🎥 Practice This Sign',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,

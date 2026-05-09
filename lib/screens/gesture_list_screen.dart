@@ -5,6 +5,7 @@ import '../models/gesture.dart';
 import '../models/lesson.dart';
 import '../services/mock_data_service.dart';
 import '../widgets/gesture_card.dart';
+import '../widgets/app_logo.dart';
 import 'gesture_detail_screen.dart';
 
 class GestureListScreen extends StatelessWidget {
@@ -17,7 +18,14 @@ class GestureListScreen extends StatelessWidget {
     final gestures = MockDataService.getGesturesForLesson(lesson);
     return Scaffold(
       appBar: AppBar(
-        title: Text(lesson.title),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogoMark(size: 28),
+            const SizedBox(width: 10),
+            Flexible(child: Text(lesson.title)),
+          ],
+        ),
       ),
       body: _GestureListContent(lesson: lesson, gestures: gestures),
     );
@@ -55,21 +63,19 @@ class _GestureListContent extends StatelessWidget {
                 lesson.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: AppConstants.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
               ),
               const SizedBox(height: 8),
               Text(
                 '${gestures.length} gestures · ${lesson.learnedSigns}/${lesson.totalSigns} mastered',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: AppConstants.textSecondary),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               LinearProgressIndicator(
                 value: lesson.progress,
-                backgroundColor: Colors.white,
+                backgroundColor: Theme.of(context).cardColor,
                 color: AppConstants.primaryColor,
                 minHeight: 10,
                 borderRadius: BorderRadius.circular(999),
@@ -121,12 +127,12 @@ class _GestureListContent extends StatelessWidget {
       showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Locked gesture'),
-          content: const Text('Complete previous gestures to unlock this one.'),
+          title: Text('Locked gesture'),
+          content: Text('Complete previous gestures to unlock this one.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Got it'),
+              child: Text('Got it'),
             ),
           ],
         ),

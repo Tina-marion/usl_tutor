@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_constants.dart';
 import '../services/user_service.dart';
+import '../widgets/app_logo.dart';
 
 class ProfileCreationScreen extends StatefulWidget {
   const ProfileCreationScreen({super.key});
@@ -42,13 +43,16 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
     try {
       final email = _emailController.text.trim();
       final finalEmail = email.isEmpty ? 'learner@usl.com' : email;
+      final enteredName = _nameController.text.trim();
+      final finalName = enteredName.isEmpty ? 'Buddy' : enteredName;
 
       final updatedProfile = _userService.getUserProfile().copyWith(
-            name: _nameController.text.trim(),
+            name: finalName,
             email: finalEmail,
           );
 
       await _userService.updateUser(updatedProfile);
+      await _userService.markProfileComplete();
 
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/onboarding');
@@ -69,7 +73,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -79,27 +83,24 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
             children: [
               const SizedBox(height: 40),
               // Header Icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppConstants.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.person_add,
-                  size: 40,
-                  color: AppConstants.primaryColor,
+              const AppLogoMark(size: 84),
+              const SizedBox(height: 24),
+              Text(
+                AppConstants.appName,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 32),
               // Title
-              const Text(
+              Text(
                 'Create Your Profile',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: AppConstants.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -109,7 +110,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                 'Let\'s personalize your learning experience',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppConstants.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -124,7 +125,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                       controller: _nameController,
                       decoration: InputDecoration(
                         hintText: 'Your Name',
-                        prefixIcon: const Icon(Icons.person),
+                        prefixIcon: Icon(Icons.person),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
@@ -150,10 +151,8 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                         ),
                       ),
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        if (value.trim().length < 2) {
+                        final trimmed = value?.trim() ?? '';
+                        if (trimmed.isNotEmpty && trimmed.length < 2) {
                           return 'Name must be at least 2 characters';
                         }
                         return null;
@@ -167,7 +166,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: 'Email (Optional)',
-                        prefixIcon: const Icon(Icons.email),
+                        prefixIcon: Icon(Icons.email),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
@@ -228,7 +227,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                                   ),
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'Create Profile',
                                 style: TextStyle(
                                   fontSize: 16,

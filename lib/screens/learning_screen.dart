@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
+import '../constants/app_constants.dart';
 import '../models/lesson.dart';
 import '../services/mock_data_service.dart';
+import '../widgets/app_logo.dart';
 import 'gesture_list_screen.dart';
 
 class LearningScreen extends StatefulWidget {
@@ -13,8 +16,14 @@ class LearningScreen extends StatefulWidget {
 
 class _LearningScreenState extends State<LearningScreen> {
   static const List<String> _categoryPriority = [
-    'alphabets', 'numbers', 'greetings', 'family', 'food',
-    'common phrases', 'colors', 'actions',
+    'alphabets',
+    'numbers',
+    'greetings',
+    'family',
+    'food',
+    'common phrases',
+    'colors',
+    'actions',
   ];
 
   String _selectedCategory = 'all';
@@ -52,7 +61,8 @@ class _LearningScreenState extends State<LearningScreen> {
 
   String _normalizeCategory(String category) {
     final value = category.trim().toLowerCase();
-    if (['letters', 'alphabet', 'alphabets'].contains(value)) return 'alphabets';
+    if (['letters', 'alphabet', 'alphabets'].contains(value))
+      return 'alphabets';
     return value;
   }
 
@@ -62,7 +72,8 @@ class _LearningScreenState extends State<LearningScreen> {
       if (first != null) return _normalizeCategory(first.category);
     }
     final text = '${lesson.title} ${lesson.description}'.toLowerCase();
-    if (text.contains('letter') || text.contains('alphabet')) return 'alphabets';
+    if (text.contains('letter') || text.contains('alphabet'))
+      return 'alphabets';
     if (text.contains('number')) return 'numbers';
     if (text.contains('greeting')) return 'greetings';
     return lesson.title.toLowerCase();
@@ -70,16 +81,26 @@ class _LearningScreenState extends State<LearningScreen> {
 
   String _categoryLabel(String key) {
     switch (key) {
-      case 'all': return 'All';
-      case 'alphabets': return 'Letters';
-      case 'numbers': return 'Numbers';
-      case 'greetings': return 'Greetings';
-      case 'family': return 'Family';
-      case 'food': return 'Food';
-      case 'common phrases': return 'Common Phrases';
-      case 'colors': return 'Colors';
-      case 'actions': return 'Actions';
-      default: return key;
+      case 'all':
+        return 'All';
+      case 'alphabets':
+        return 'Letters';
+      case 'numbers':
+        return 'Numbers';
+      case 'greetings':
+        return 'Greetings';
+      case 'family':
+        return 'Family';
+      case 'food':
+        return 'Food';
+      case 'common phrases':
+        return 'Common Phrases';
+      case 'colors':
+        return 'Colors';
+      case 'actions':
+        return 'Actions';
+      default:
+        return key;
     }
   }
 
@@ -92,44 +113,170 @@ class _LearningScreenState extends State<LearningScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredLessons = _getFilteredLessons();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          _buildCategoryFilters(),
-          Expanded(child: _buildLessonsGrid()),
-        ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).scaffoldBackgroundColor,
+              Theme.of(context).cardColor.withValues(alpha: 0.55),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                  child: _buildHeroPanel(filteredLessons.length)),
+              SliverToBoxAdapter(child: _buildCategoryFilters()),
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 8),
+                sliver: _buildLessonsSliver(filteredLessons),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFFF8F9FA),
-      elevation: 4,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      elevation: 0,
       centerTitle: true,
-      title: const Text(
-        'Learn USL',
-        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 20),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppLogoMark(size: 28),
+          const SizedBox(width: 10),
+          Text(
+            'Learn USL',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 20),
+          ),
+        ],
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.search, color: Colors.black),
+          icon: Icon(Icons.search,
+              color: Theme.of(context).colorScheme.onSurface),
           onPressed: _showSearchDialog,
         ),
       ],
     );
   }
 
+  Widget _buildHeroPanel(int visibleLessons) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+        border: Border.all(color: AppConstants.dividerColor),
+        boxShadow: [
+          BoxShadow(
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppConstants.primaryGradient,
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Explore USL lessons',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Pick a category, open a lesson, and start building your sign vocabulary.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${_lessons.length}',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              Text(
+                'lessons',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '$visibleLessons visible',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppConstants.primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.08, end: 0);
+  }
+
   Widget _buildCategoryFilters() {
     final categories = <String>['all', ..._availableCategoryKeys()];
 
     return SizedBox(
-      height: 50,
+      height: 56,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: categories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
@@ -139,21 +286,37 @@ class _LearningScreenState extends State<LearningScreen> {
           return GestureDetector(
             onTap: () => setState(() => _selectedCategory = key),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.green : Colors.white,
-                gradient: isSelected 
-                    ? LinearGradient(colors: [Colors.green.shade700, Colors.green.shade300]) 
-                    : null,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: isSelected ? [BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(0, 2))] : [],
+                color: isSelected
+                    ? AppConstants.primaryColor
+                    : Theme.of(context).cardColor,
+                gradient: isSelected ? AppConstants.primaryGradient : null,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.transparent
+                      : AppConstants.dividerColor,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color:
+                              AppConstants.primaryColor.withValues(alpha: 0.22),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : [],
               ),
               child: Text(
                 _categoryLabel(key),
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? Colors.white : Colors.black,
+                  fontSize: 13.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? Colors.white
+                      : Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -171,129 +334,233 @@ class _LearningScreenState extends State<LearningScreen> {
     return keys.toList();
   }
 
-  Widget _buildLessonsGrid() {
-    var filtered = _selectedCategory == 'all'
-        ? List<Lesson>.from(_lessons)
-        : _lessons.where((l) => _lessonCategoryKey(l) == _selectedCategory).toList();
-
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((l) =>
-      l.title.toLowerCase().contains(_searchQuery) ||
-          l.description.toLowerCase().contains(_searchQuery)).toList();
+  Widget _buildLessonsSliver(List<Lesson> filtered) {
+    if (filtered.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+              border: Border.all(color: AppConstants.dividerColor),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryColor.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.search_off_rounded,
+                    size: 36,
+                    color: AppConstants.primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No lessons found',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Try a different category or search term.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    height: 1.4,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.82,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final lesson = filtered[index];
+            return _LessonCard(
+              lesson: lesson,
+              onTap: () => _onLessonTap(lesson),
+            ).animate().fadeIn(duration: 400.ms);
+          },
+          childCount: filtered.length,
+        ),
       ),
-      itemCount: filtered.length,
-      itemBuilder: (context, index) {
-        final lesson = filtered[index];
-
-        return _LessonCard(
-          lesson: lesson,
-          onTap: () => _onLessonTap(lesson),
-        ).animate().fadeIn(duration: 400.ms);
-      },
     );
   }
 
   Widget _LessonCard({required Lesson lesson, required VoidCallback onTap}) {
     final progress = lesson.progress.clamp(0.0, 1.0);
     final categoryColor = _getCategoryColor(_lessonCategoryKey(lesson));
-    final screenWidth = MediaQuery.of(context).size.width;
-    final iconSize = screenWidth * 0.25; // Adjusted size for better aesthetics
+    final categoryLabel = _categoryLabel(_lessonCategoryKey(lesson));
+    final progressLabel = progress > 0 ? 'Continue' : 'Start here';
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 200, // Fixed height for consistency
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppConstants.dividerColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.07),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              height: 6,
+              height: 4,
               decoration: BoxDecoration(
                 color: categoryColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
             ),
-            const SizedBox(height: 12),
-
-            Container(
-              width: iconSize,
-              height: iconSize,
-              decoration: BoxDecoration(
-                color: categoryColor.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  lesson.icon,
-                  style: const TextStyle(fontSize: 42),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: categoryColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            categoryLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: categoryColor,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          progress > 0 ? Icons.play_circle : Icons.flag_rounded,
+                          size: 18,
+                          color: categoryColor,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 62,
+                      height: 62,
+                      decoration: BoxDecoration(
+                        color: categoryColor.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          lesson.icon,
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      lesson.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      '${lesson.totalSigns} signs',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (progress > 0)
+                      Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 6,
+                              backgroundColor: Theme.of(context)
+                                  .dividerColor
+                                  .withValues(alpha: 0.5),
+                              valueColor: AlwaysStoppedAnimation(categoryColor),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${(progress * 100).toInt()}% complete · $progressLabel',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: categoryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: categoryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '$progressLabel',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: categoryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 10),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                lesson.title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              '${lesson.totalSigns} signs',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            if (progress > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 6,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor: AlwaysStoppedAnimation(categoryColor),
-                ),
-              )
-            else
-              const Text(
-                'Lets get started!',
-                style: TextStyle(fontSize: 12, color: Color.fromARGB(255, 255, 107, 39)),
-              ),
-
-            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -302,23 +569,50 @@ class _LearningScreenState extends State<LearningScreen> {
 
   Color _getCategoryColor(String categoryKey) {
     switch (categoryKey) {
-      case 'alphabets': return Colors.blue;
-      case 'numbers': return Colors.orange;
-      case 'greetings': return Colors.green;
-      case 'family': return Colors.purple;
-      case 'food': return Colors.deepOrange;
-      case 'common phrases': return Colors.teal;
-      case 'colors': return Colors.pink;
-      case 'actions': return Colors.indigo;
-      default: return Colors.green;
+      case 'alphabets':
+        return AppConstants.secondaryColor;
+      case 'numbers':
+        return AppConstants.accentColor;
+      case 'greetings':
+        return AppConstants.successColor;
+      case 'family':
+        return const Color(0xFF8B5CF6);
+      case 'food':
+        return const Color(0xFFF97316);
+      case 'common phrases':
+        return const Color(0xFF14B8A6);
+      case 'colors':
+        return const Color(0xFFEC4899);
+      case 'actions':
+        return const Color(0xFF6366F1);
+      default:
+        return AppConstants.primaryColor;
     }
+  }
+
+  List<Lesson> _getFilteredLessons() {
+    var filtered = _selectedCategory == 'all'
+        ? List<Lesson>.from(_lessons)
+        : _lessons
+            .where((l) => _lessonCategoryKey(l) == _selectedCategory)
+            .toList();
+
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered
+          .where((l) =>
+              l.title.toLowerCase().contains(_searchQuery) ||
+              l.description.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
+
+    return filtered;
   }
 
   void _showSearchDialog() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Search Lessons'),
+        title: Text('Search Lessons'),
         content: TextField(
           controller: _searchController,
           decoration: const InputDecoration(
