@@ -167,6 +167,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
           looping: true,
           aspectRatio: _videoController!.value.aspectRatio,
           showControlsOnInitialize: true,
+          showControls: false,
           errorBuilder: (context, errorMessage) {
             return Center(
               child: Padding(
@@ -561,23 +562,59 @@ class _PracticeScreenState extends State<PracticeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: AppConstants.primaryGradient,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.play_circle_fill_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Practice a category',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: AppConstants.fontSizeLarge,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Pick one mode to load the matching videos and camera practice.',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
             Text(
-              'Hey!!! Ready to practice some USL?',
+              'Modes',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: AppConstants.fontSizeLarge,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Choose a category to start.',
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             SizedBox(
-              height: 62,
+              height: 68,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.zero,
@@ -587,7 +624,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 itemBuilder: (context, index) {
                   final mode = _practiceModes[index];
                   return SizedBox(
-                    width: 172,
+                    width: 180,
                     child: OutlinedButton.icon(
                       onPressed: () => _selectMode(mode),
                       icon: Icon(_practiceModeIcon(mode)),
@@ -598,6 +635,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                             const BorderSide(color: AppConstants.dividerColor),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         alignment: Alignment.centerLeft,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   );
@@ -617,11 +657,40 @@ class _PracticeScreenState extends State<PracticeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppConstants.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  _selectedModeLabel,
+                  style: TextStyle(
+                    color: AppConstants.primaryColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Mode selected',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
           Text(
-            'Mode: $_selectedModeLabel',
+            'Switch mode or move to the next video.',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 10),
@@ -681,10 +750,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
         ),
       ),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildModePanel(),
             Expanded(
+              flex: 8,
               child: Container(
                 margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                 decoration: BoxDecoration(
@@ -820,8 +891,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               top: 10,
                               right: 10,
                               child: Container(
-                                width: 140,
-                                height: 188,
+                                width: 136,
+                                height: 184,
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: AppConstants.primaryColor,
@@ -917,11 +988,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
               ),
             ),
             Flexible(
+              flex: 2,
               fit: FlexFit.loose,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   decoration: _panelDecoration,
                   child: SafeArea(
                     top: false,

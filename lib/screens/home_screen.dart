@@ -169,15 +169,15 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             IconButton(
                 icon: Icon(Icons.school_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: AppConstants.primaryColor, size: 28),
                 onPressed: () => _openAndRefresh('/learning')),
             IconButton(
                 icon: Icon(Icons.videocam_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: AppConstants.primaryColor, size: 28),
                 onPressed: () => _openAndRefresh('/practice')),
             IconButton(
                 icon: Icon(Icons.person_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: AppConstants.primaryColor, size: 28),
                 onPressed: () => _openAndRefresh('/profile')),
           ],
         ),
