@@ -212,7 +212,7 @@ class _WelcomeSection extends StatelessWidget {
               child: Text(
                 '$greeting, $userName!',
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 28,
                   fontWeight: FontWeight.w900,
                   color: Theme.of(context)
                       .colorScheme
@@ -358,17 +358,21 @@ class _DailyChallengeCard extends StatelessWidget {
     final remainingXp = (xpForNextLevel - xp).clamp(0, xpForNextLevel);
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(26),
+        gradient: LinearGradient(
+          colors: [
+            AppConstants.primaryColor.withOpacity(0.95),
+            AppConstants.primaryColor.withOpacity(0.85)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
         boxShadow: [
           BoxShadow(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.08),
-              blurRadius: 20,
+              color: AppConstants.primaryColor.withOpacity(0.18),
+              blurRadius: 18,
               offset: const Offset(0, 10)),
         ],
       ),
@@ -379,74 +383,62 @@ class _DailyChallengeCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.emoji_events_rounded,
-                color: AppConstants.accentColor,
-                size: 38,
+                color: Colors.white,
+                size: AppConstants.iconSizeLarge,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Daily Challenge',
                   style: TextStyle(
-                      fontSize: 23,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.87)),
+                      color: Colors.white),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           Text(
             'Reach Level ${level + 1}',
             style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.87)),
+                color: Colors.white70),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 14),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: LinearProgressIndicator(
               value: clampedProgress,
-              minHeight: 14,
-              backgroundColor: Theme.of(context).dividerColor,
-              valueColor:
-                  const AlwaysStoppedAnimation(AppConstants.primaryColor),
+              minHeight: 10,
+              backgroundColor: Colors.white.withOpacity(0.25),
+              valueColor: const AlwaysStoppedAnimation(Colors.white),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Level $level: $xp/$xpForNextLevel XP',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              Text('$remainingXp XP left',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.w600)),
+              Text(
+                  'Level $level • ${(clampedProgress * 100).round()}% complete',
+                  style: TextStyle(color: Colors.white70)),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: onStartChallenge,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 250, 150, 11),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 18),
+                backgroundColor: Colors.white,
+                foregroundColor: AppConstants.primaryColor,
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(22)),
-                elevation: 3,
+                    borderRadius: BorderRadius.circular(999)),
+                elevation: 0,
               ),
-              child: Text('Start Challenge →',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+              child: Text('Continue',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -468,7 +460,7 @@ class _QuickActionsSection extends StatelessWidget {
         Text(
           'Quick Actions',
           style: TextStyle(
-              fontSize: 23,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Theme.of(context)
                   .colorScheme
@@ -476,7 +468,7 @@ class _QuickActionsSection extends StatelessWidget {
                   .withValues(alpha: 0.87)),
         ),
         const SizedBox(
-          height: 20,
+          height: 12,
         ),
         Row(
           children: [
@@ -487,17 +479,17 @@ class _QuickActionsSection extends StatelessWidget {
                     color: AppConstants.secondaryColor,
                     route: '/learning',
                     onOpenRoute: onOpenRoute)),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
                 child: _SimpleActionCard(
                     icon: Icons.videocam_rounded,
                     label: 'Practice',
-                    color: AppConstants.primaryColor,
+                    color: AppConstants.errorColor,
                     route: '/practice',
                     onOpenRoute: onOpenRoute)),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
@@ -507,7 +499,7 @@ class _QuickActionsSection extends StatelessWidget {
                     color: AppConstants.accentColor,
                     route: '/quiz',
                     onOpenRoute: onOpenRoute)),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
                 child: _SimpleActionCard(
                     icon: Icons.bar_chart_rounded,
@@ -542,29 +534,29 @@ class _SimpleActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => onOpenRoute(route),
       child: Container(
-        height: 158,
+        height: 116,
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
           boxShadow: [
             BoxShadow(
                 color: Theme.of(context)
                     .colorScheme
                     .onSurface
-                    .withValues(alpha: 0.08),
-                blurRadius: 16,
-                offset: const Offset(0, 8)),
+                    .withValues(alpha: 0.055),
+                blurRadius: 10,
+                offset: const Offset(0, 5)),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 52, color: color),
-            const SizedBox(height: 14),
+            Icon(icon, size: 30, color: color),
+            const SizedBox(height: 10),
             Text(
               label,
               style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: Theme.of(context)
                       .colorScheme
@@ -575,8 +567,8 @@ class _SimpleActionCard extends StatelessWidget {
         ),
       )
           .animate()
-          .fadeIn(duration: 500.ms)
-          .scale(begin: const Offset(0.92, 0.92)),
+          .fadeIn(duration: 450.ms)
+          .scale(begin: const Offset(0.95, 0.95)),
     );
   }
 }

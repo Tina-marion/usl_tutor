@@ -137,7 +137,7 @@ class _LearningScreenState extends State<LearningScreen> {
                   child: _buildHeroPanel(filteredLessons.length)),
               SliverToBoxAdapter(child: _buildCategoryFilters()),
               SliverPadding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: AppConstants.paddingSmall),
                 sliver: _buildLessonsSliver(filteredLessons),
               ),
             ],
@@ -179,8 +179,10 @@ class _LearningScreenState extends State<LearningScreen> {
   Widget _buildHeroPanel(int visibleLessons) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.symmetric(
+          horizontal: AppConstants.paddingMedium,
+          vertical: AppConstants.paddingSmall),
+      padding: EdgeInsets.all(AppConstants.paddingLarge),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
@@ -201,19 +203,19 @@ class _LearningScreenState extends State<LearningScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 58,
-                height: 58,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: AppConstants.primaryGradient,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.menu_book_rounded,
                   color: Colors.white,
-                  size: 30,
+                  size: AppConstants.iconSizeLarge,
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppConstants.paddingMedium),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +223,7 @@ class _LearningScreenState extends State<LearningScreen> {
                     Text(
                       'Explore USL lessons',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: AppConstants.fontSizeXL,
                         fontWeight: FontWeight.w800,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
@@ -232,7 +234,7 @@ class _LearningScreenState extends State<LearningScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: AppConstants.fontSizeSmall,
                         height: 1.35,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -242,11 +244,11 @@ class _LearningScreenState extends State<LearningScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppConstants.paddingSmall),
           Text(
             '$visibleLessons lessons ready to browse',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: AppConstants.fontSizeSmall,
               fontWeight: FontWeight.w600,
               color: AppConstants.primaryColor,
             ),
@@ -263,47 +265,68 @@ class _LearningScreenState extends State<LearningScreen> {
       height: 56,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding:
+            const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
         itemCount: categories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final key = categories[index];
           final isSelected = key == _selectedCategory;
 
-          return GestureDetector(
-            onTap: () => setState(() => _selectedCategory = key),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppConstants.primaryColor
-                    : Theme.of(context).cardColor,
-                gradient: isSelected ? AppConstants.primaryGradient : null,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(
+          return Semantics(
+            label: 'Category ${_categoryLabel(key)}',
+            button: true,
+            selected: isSelected,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 60, minHeight: 30),
+              child: Container(
+                decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.transparent
-                      : AppConstants.dividerColor,
+                      ? AppConstants.primaryColor
+                      : Theme.of(context).cardColor,
+                  gradient: isSelected ? AppConstants.primaryGradient : null,
+                  borderRadius:
+                      BorderRadius.circular(AppConstants.radiusMedium),
+                  border: Border.all(
+                    color: isSelected
+                        ? Colors.transparent
+                        : AppConstants.dividerColor,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppConstants.primaryColor
+                                .withValues(alpha: 0.18),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [],
                 ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color:
-                              AppConstants.primaryColor.withValues(alpha: 0.22),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius:
+                        BorderRadius.circular(AppConstants.radiusMedium),
+                    onTap: () => setState(() => _selectedCategory = key),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppConstants.paddingSmall, vertical: 6),
+                      child: Center(
+                        child: Text(
+                          _categoryLabel(key),
+                          style: TextStyle(
+                            fontSize: AppConstants.fontSizeSmall,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected
+                                ? Colors.white
+                                : Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
-                      ]
-                    : [],
-              ),
-              child: Text(
-                _categoryLabel(key),
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected
-                      ? Colors.white
-                      : Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -346,15 +369,15 @@ class _LearningScreenState extends State<LearningScreen> {
                   ),
                   child: Icon(
                     Icons.search_off_rounded,
-                    size: 36,
+                    size: AppConstants.iconSizeXL,
                     color: AppConstants.primaryColor,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppConstants.paddingMedium),
                 Text(
                   'No lessons found',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: AppConstants.fontSizeLarge,
                     fontWeight: FontWeight.w800,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -364,7 +387,7 @@ class _LearningScreenState extends State<LearningScreen> {
                   'Try a different category or search term.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 13.5,
+                    fontSize: AppConstants.fontSizeSmall,
                     height: 1.4,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -375,13 +398,20 @@ class _LearningScreenState extends State<LearningScreen> {
         ),
       );
     }
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width >= 1000
+        ? 4
+        : width >= 700
+            ? 3
+            : 2;
+    final childAspect = width >= 700 ? 0.86 : 0.76;
 
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.76,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: childAspect,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),

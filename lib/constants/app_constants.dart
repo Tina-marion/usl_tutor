@@ -41,16 +41,16 @@ class AppConstants {
   );
 
   // Spacing
-  static const double paddingSmall = 8.0;
-  static const double paddingMedium = 16.0;
-  static const double paddingLarge = 24.0;
-  static const double paddingXL = 32.0;
+  static const double paddingSmall = 6.0;
+  static const double paddingMedium = 12.0;
+  static const double paddingLarge = 18.0;
+  static const double paddingXL = 24.0;
 
   // Border Radius
-  static const double radiusSmall = 8.0;
-  static const double radiusMedium = 12.0;
-  static const double radiusLarge = 16.0;
-  static const double radiusXL = 24.0;
+  static const double radiusSmall = 6.0;
+  static const double radiusMedium = 9.0;
+  static const double radiusLarge = 12.0;
+  static const double radiusXL = 18.0;
 
   // Font Sizes
   static const double fontSizeSmall = 12.0;
@@ -61,10 +61,10 @@ class AppConstants {
   static const double fontSizeXXL = 32.0;
 
   // Icon Sizes
-  static const double iconSizeSmall = 16.0;
-  static const double iconSizeMedium = 24.0;
-  static const double iconSizeLarge = 32.0;
-  static const double iconSizeXL = 48.0;
+  static const double iconSizeSmall = 14.0;
+  static const double iconSizeMedium = 20.0;
+  static const double iconSizeLarge = 26.0;
+  static const double iconSizeXL = 40.0;
 
   // Animation Durations
   static const Duration animationFast = Duration(milliseconds: 150);
