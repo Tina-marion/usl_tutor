@@ -185,7 +185,8 @@ class QuizResultsScreen extends StatelessWidget {
       children: [
         Expanded(
           child: OutlinedButton(
-              onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+            onPressed: () =>
+                Navigator.popUntil(context, (route) => route.isFirst),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
@@ -195,7 +196,7 @@ class QuizResultsScreen extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: ElevatedButton(
-              onPressed: () => Navigator.pop(context, 'retry'),
+            onPressed: () => Navigator.pop(context, 'retry'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppConstants.primaryColor,
               foregroundColor: Colors.white,
