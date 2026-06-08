@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'user_service.dart';
+import 'mock_data_service.dart';
 
 /// Service for persisting user progress, favorites, and stats
 class ProgressService {
@@ -41,10 +42,12 @@ class ProgressService {
       await _prefs.setStringList(_learnedGesturesKey, learned);
       await _userService.addXp(_xpPerGestureLearned);
       // Log activity
+      final gesture = MockDataService.getGestureById(gestureId);
+      final gestureDisplay = gesture?.name ?? gestureId;
       await addActivity(
         type: 'learned',
-        title: '$gestureId - Learned',
-        gestureName: gestureId,
+        title: '$gestureDisplay - Learned',
+        gestureName: gestureDisplay,
       );
     }
   }
@@ -71,10 +74,12 @@ class ProgressService {
       await _prefs.setStringList(_masteredGesturesKey, mastered);
       await _userService.addXp(_xpPerGestureMasteredBonus);
       // Log activity
+      final gesture = MockDataService.getGestureById(gestureId);
+      final gestureDisplay = gesture?.name ?? gestureId;
       await addActivity(
         type: 'mastered',
-        title: '$gestureId - Mastered',
-        gestureName: gestureId,
+        title: '$gestureDisplay - Mastered',
+        gestureName: gestureDisplay,
       );
     }
     await markGestureAsLearned(gestureId);

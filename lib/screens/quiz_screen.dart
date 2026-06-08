@@ -94,6 +94,7 @@ class _QuizScreenState extends State<QuizScreen> {
       timeTaken: Duration(seconds: _secondsElapsed),
     );
 
+    // Show results and handle a possible 'retry' response to restart the quiz
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -103,7 +104,26 @@ class _QuizScreenState extends State<QuizScreen> {
           answers: _answers,
         ),
       ),
-    );
+    ).then((res) {
+      if (res == 'retry' && mounted) {
+        _restartQuiz();
+      }
+    });
+  }
+
+  void _restartQuiz() {
+    setState(() {
+      _secondsElapsed = 0;
+      _currentQuestionIndex = 0;
+      _selectedAnswerIndex = null;
+      _hasAnswered = false;
+      _answers.clear();
+      _questions = _quizService.generateQuiz(
+        numberOfQuestions: widget.numberOfQuestions,
+      );
+      _timer?.cancel();
+      _startTimer();
+    });
   }
 
   @override
@@ -231,36 +251,37 @@ class _QuizScreenState extends State<QuizScreen> {
         return GestureDetector(
           onTap: () => _selectAnswer(index),
           child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: bg,
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: border, width: 2),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: border, width: 1.5),
             ),
             child: Row(
               children: [
                 CircleAvatar(
+                  radius: 18,
                   backgroundColor: border,
                   child: Text(
                     String.fromCharCode(65 + index),
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     option,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
                 if (_hasAnswered && isCorrect)
-                  Icon(Icons.check_circle, color: Colors.green),
+                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
                 if (_hasAnswered && isSelected && !isCorrect)
-                  Icon(Icons.cancel, color: Colors.red),
+                  const Icon(Icons.cancel, color: Colors.red, size: 20),
               ],
             ),
           ),

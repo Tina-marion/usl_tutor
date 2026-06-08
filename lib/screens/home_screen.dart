@@ -91,10 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       streak: currentStreak,
                     ),
                     const SizedBox(height: 32),
-                    if (currentStreak > 0) ...[
-                      _StreakCard(streak: currentStreak),
-                      const SizedBox(height: 32),
-                    ],
                     _DailyChallengeCard(
                       level: level,
                       xp: xp,
@@ -259,81 +255,6 @@ class _WelcomeSection extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _StreakCard extends StatelessWidget {
-  final int streak;
-
-  const _StreakCard({required this.streak});
-
-  String get _titleText =>
-      streak <= 0 ? 'Start your streak!' : "You're on a roll!";
-
-  String get _subtitleText => streak <= 0
-      ? 'Complete one practice or learning session today.'
-      : '$streak day learning streak';
-
-  String get _buttonText => streak <= 0 ? 'Begin Now' : 'Keep it up!';
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.07),
-              blurRadius: 20,
-              offset: const Offset(0, 8)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.whatshot_rounded,
-            color: AppConstants.warningColor,
-            size: 42,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _titleText,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  _subtitleText,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppConstants.warningColor,
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Text(
-              _buttonText,
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
