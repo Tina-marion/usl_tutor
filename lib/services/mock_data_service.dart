@@ -9,7 +9,7 @@ class MockDataService {
       id: 'g1',
       name: 'Hello',
       category: 'Greetings',
-      description: 'A friendly greeting gesture',
+      description: '',
       difficulty: 'Easy',
       videoUrl: 'assets/videos/greetings/0001.mp4',
       instructions: [
@@ -1179,9 +1179,22 @@ class MockDataService {
       description: 'Basic number signs',
       icon: '🔢',
       imagePath: 'assets/DP.jpeg',
-      totalSigns: 3,
+      totalSigns: 11,
       learnedSigns: 0,
-      gestureIds: ['n1', 'n2', 'n54'],
+      gestureIds: [
+        'n0',
+        'n1',
+        'n2',
+        'n3',
+        'n4',
+        'n5',
+        'n6',
+        'n7',
+        'n8',
+        'n9',
+        'n10',
+        'n54',
+      ],
     ),
     const Lesson(
       id: 'l4',
@@ -1195,13 +1208,40 @@ class MockDataService {
     ),
     const Lesson(
       id: 'l6',
-      title: 'Letters A-C',
+      title: 'Letters A-Z',
       description: 'Practice basic alphabet handshapes',
       icon: '🔤',
       imagePath: 'assets/DP.jpeg',
       totalSigns: 3,
       learnedSigns: 0,
-      gestureIds: ['letter1', 'letter2', 'letter3'],
+      gestureIds: [
+        'letter1',
+        'letter2',
+        'letter3',
+        'letter4',
+        'letter5',
+        'letter6',
+        'letter7',
+        'letter8',
+        'letter9',
+        'letter10',
+        'letter11',
+        'letter12',
+        'letter13',
+        'letter14',
+        'letter15',
+        'letter16',
+        'letter17',
+        'letter18',
+        'letter19',
+        'letter20',
+        'letter21',
+        'letter22',
+        'letter23',
+        'letter24',
+        'letter25',
+        'letter26'
+      ],
     ),
     const Lesson(
       id: 'l5',
@@ -1230,17 +1270,15 @@ class MockDataService {
       _gestures.where((g) => g.category == category).toList();
 
   static GestureModel? getGestureById(String id) {
-    return _gestures.where((g) => g.id == id).cast<GestureModel?>().firstWhere(
-          (g) => g != null && g.id == id,
-          orElse: () => null,
-        );
+    final matches = _gestures.where((g) => g.id == id).toList();
+    if (matches.isEmpty) return null;
+    return matches.first;
   }
 
   static Lesson? getLessonById(String id) {
-    return _lessons.where((l) => l.id == id).cast<Lesson?>().firstWhere(
-          (l) => l != null && l.id == id,
-          orElse: () => null,
-        );
+    final matches = _lessons.where((l) => l.id == id).toList();
+    if (matches.isEmpty) return null;
+    return matches.first;
   }
 
   static List<GestureModel> getGesturesForLesson(Lesson lesson) {
