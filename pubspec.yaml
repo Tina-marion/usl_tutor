@@ -57,10 +57,15 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Assets
+  # Assets - explicitly listed subdirectories so all videos are bundled
   assets:
     - assets/DP.jpeg
-    - assets/videos/
+    - assets/videos/greetings/
+    - assets/videos/family/
+    - assets/videos/food/
+    - assets/videos/letters/
+    - assets/videos/numbers/
+    - assets/videos/common_phrases/
     - assets/models/
     - assets/data/
 

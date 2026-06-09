@@ -11,7 +11,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'A friendly greeting gesture',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0001.mp4',
+      videoUrl: 'assets/videos/greetings/0001.mp4',
       instructions: [
         'Raise your dominant hand to ear level',
         'Keep palm open, fingers together',
@@ -31,7 +31,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Express gratitude',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0013.mp4',
+      videoUrl: 'assets/videos/greetings/0013.mp4',
       instructions: [
         'Touch your chin with fingertips',
         'Move hand forward and down',
@@ -52,7 +52,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Make a polite request',
       difficulty: 'Medium',
-      videoUrl: 'assets/videos/0016.mp4',
+      videoUrl: 'assets/videos/letters/D.mp4',
       instructions: [
         'Place hand flat on chest',
         'Move in circular motion',
@@ -73,7 +73,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Morning greeting - Good',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0018.mp4',
+      videoUrl: 'assets/videos/greetings/0018.mp4',
       instructions: [
         'Sign "good" first',
         'Then sign "morning"',
@@ -93,7 +93,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Farewell gesture',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0027.mp4',
+      videoUrl: 'assets/videos/greetings/0027.mp4',
       instructions: [
         'Raise hand with palm facing person',
         'Open and close fingers',
@@ -113,7 +113,8 @@ class MockDataService {
       category: 'Family',
       description: 'Sign for mother',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/mother.mp4',
+      // Asset file available in this repo: assets/videos/family/0083.mp4
+      videoUrl: 'assets/videos/family/0083.mp4',
       instructions: [
         'Touch thumb to chin',
         'Spread fingers',
@@ -133,7 +134,8 @@ class MockDataService {
       category: 'Family',
       description: 'Sign for father',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/father.mp4',
+      // Asset file available in this repo: assets/videos/family/0083.mp4
+      videoUrl: 'assets/videos/family/0083.mp4',
       instructions: [
         'Touch thumb to forehead',
         'Spread fingers',
@@ -153,7 +155,8 @@ class MockDataService {
       category: 'Family',
       description: 'Sign for sister',
       difficulty: 'Medium',
-      videoUrl: 'assets/videos/sister.mp4',
+      // Asset file available in this repo: assets/videos/family/0083.mp4
+      videoUrl: 'assets/videos/family/0083.mp4',
       instructions: [
         'Sign "girl" first',
         'Then sign "same"',
@@ -173,7 +176,7 @@ class MockDataService {
       category: 'Numbers',
       description: 'Number 1',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/1.mp4',
+      videoUrl: 'assets/videos/numbers/1.mp4',
       instructions: [
         'Raise index finger',
         'Keep other fingers closed',
@@ -193,7 +196,7 @@ class MockDataService {
       category: 'Numbers',
       description: 'Number 2',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/2.mp4',
+      videoUrl: 'assets/videos/numbers/2.mp4',
       instructions: [
         'Raise index and middle finger',
         'Keep other fingers closed',
@@ -213,7 +216,7 @@ class MockDataService {
       category: 'Numbers',
       description: 'Number 54',
       difficulty: 'Medium',
-      videoUrl: 'assets/videos/54.mp4',
+      videoUrl: 'assets/videos/numbers/54.mp4',
       instructions: [
         'Sign fifty first',
         'Then sign four',
@@ -233,7 +236,7 @@ class MockDataService {
       category: 'Letters',
       description: 'Letter A handshape',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/A.mp4',
+      videoUrl: 'assets/videos/letters/A.mp4',
       instructions: [
         'Make a closed fist',
         'Rest thumb along the side',
@@ -253,7 +256,7 @@ class MockDataService {
       category: 'Letters',
       description: 'Letter B handshape',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/B.mp4',
+      videoUrl: 'assets/videos/letters/B.mp4',
       instructions: [
         'Raise fingers straight up',
         'Keep fingers together',
@@ -273,7 +276,7 @@ class MockDataService {
       category: 'Letters',
       description: 'Letter C handshape',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0005.mp4',
+      videoUrl: 'assets/videos/letters/D.mp4',
       instructions: [
         'Curve fingers and thumb',
         'Form a clear C shape',
@@ -293,7 +296,7 @@ class MockDataService {
       category: 'Food',
       description: 'Sign for food',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0063.mp4',
+      videoUrl: 'assets/videos/food/0063.mp4',
       instructions: [
         'Bring fingers to mouth',
         'Repeat motion',
@@ -313,7 +316,7 @@ class MockDataService {
       category: 'Family',
       description: 'Sign for parents',
       difficulty: 'Medium',
-      videoUrl: 'assets/videos/0083.mp4',
+      videoUrl: 'assets/videos/family/0083.mp4',
       instructions: [
         'Combine mother and father signs',
         'Sign for both parents',
@@ -333,7 +336,7 @@ class MockDataService {
       category: 'Common Phrases',
       description: 'Sign for users or people',
       difficulty: 'Medium',
-      videoUrl: 'assets/videos/0089.mp4',
+      videoUrl: 'assets/videos/common_phrases/0089.mp4',
       instructions: [
         'Indicate multiple people',
         'Sweeping motion',
@@ -353,7 +356,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Time of day - morning',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0019.mp4',
+      videoUrl: 'assets/videos/greetings/0019.mp4',
       instructions: [
         'Bring arm up like sunrise',
         'Palm facing up',
@@ -373,7 +376,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Time of day - afternoon',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0020.mp4',
+      videoUrl: 'assets/videos/greetings/0020.mp4',
       instructions: [
         'Arm at an angle',
         'Palm down position',
@@ -393,7 +396,7 @@ class MockDataService {
       category: 'Greetings',
       description: 'Time of day - evening',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0021.mp4',
+      videoUrl: 'assets/videos/greetings/0021.mp4',
       instructions: [
         'Arm going down like sunset',
         'Palm down',
@@ -413,7 +416,7 @@ class MockDataService {
       category: 'Common Phrases',
       description: 'Full day or daytime',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0022.mp4',
+      videoUrl: 'assets/videos/common_phrases/0022.mp4',
       instructions: [
         'Point to the sky',
         'Arc motion across',
@@ -433,7 +436,7 @@ class MockDataService {
       category: 'Common Phrases',
       description: 'Positive affirmation',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0023.mp4',
+      videoUrl: 'assets/videos/common_phrases/0023.mp4',
       instructions: [
         'Touch chin with flat hand',
         'Move forward and down',
@@ -453,7 +456,7 @@ class MockDataService {
       category: 'Common Phrases',
       description: 'Negative affirmation',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0024.mp4',
+      videoUrl: 'assets/videos/common_phrases/0024.mp4',
       instructions: [
         'Similar to good but different direction',
         'Touch chin then flip away',
@@ -473,7 +476,7 @@ class MockDataService {
       category: 'Common Phrases',
       description: 'Connector word for joining ideas',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/0066.mp4',
+      videoUrl: 'assets/videos/common_phrases/0066.mp4',
       instructions: [
         'Make the sign for and',
         'Keep movement compact and clear',
@@ -493,7 +496,7 @@ class MockDataService {
       category: 'Common Phrases',
       description: 'Express ability or possibility',
       difficulty: 'Easy',
-      videoUrl: 'assets/videos/can.mp4',
+      videoUrl: 'assets/videos/common_phrases/can.mp4',
       instructions: [
         'Form both hands for the can sign',
         'Bring the hands into position',
