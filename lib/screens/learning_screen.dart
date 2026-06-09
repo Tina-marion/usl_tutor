@@ -4,7 +4,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../constants/app_constants.dart';
 import '../models/lesson.dart';
 import '../services/mock_data_service.dart';
+import '../services/progress_service.dart';
 import '../widgets/app_logo.dart';
+
 import 'gesture_list_screen.dart';
 
 class LearningScreen extends StatefulWidget {
@@ -67,11 +69,15 @@ class _LearningScreenState extends State<LearningScreen> {
     }
   }
 
-  void _loadLessons() {
+  final ProgressService _progressService = ProgressService();
+  bool _progressReady = false;
+
+  Future<void> _loadLessons() async {
     final lessonsById = <String, Lesson>{};
     for (final lesson in MockDataService.getLessons()) {
       lessonsById[lesson.id.trim()] = lesson;
     }
+
     final lessons = lessonsById.values.toList();
     lessons.sort((a, b) {
       final aPriority = _categoryPriority.indexOf(_lessonCategoryKey(a));
@@ -81,7 +87,24 @@ class _LearningScreenState extends State<LearningScreen> {
       if (safeA != safeB) return safeA.compareTo(safeB);
       return a.title.compareTo(b.title);
     });
+
     setState(() => _lessons = lessons);
+
+    // Recalculate progress from persisted user progress.
+    await _progressService.init();
+    final learnedGestures = _progressService.getLearnedGestures().toSet();
+
+    final updatedLessons = lessons.map((lesson) {
+      final learnedCount = lesson.gestureIds
+          .where((gid) => learnedGestures.contains(gid))
+          .length;
+      return lesson.copyWith(learnedSigns: learnedCount);
+    }).toList();
+
+    setState(() {
+      _lessons = updatedLessons;
+      _progressReady = true;
+    });
   }
 
   String _normalizeCategory(String category) {

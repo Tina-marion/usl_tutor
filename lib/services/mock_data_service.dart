@@ -1212,7 +1212,7 @@ class MockDataService {
       description: 'Practice basic alphabet handshapes',
       icon: '🔤',
       imagePath: 'assets/DP.jpeg',
-      totalSigns: 3,
+      totalSigns: 26,
       learnedSigns: 0,
       gestureIds: [
         'letter1',
