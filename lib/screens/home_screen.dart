@@ -169,15 +169,15 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             IconButton(
                 icon: Icon(Icons.school_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: const Color.fromARGB(255, 15, 108, 110), size: 28),
                 onPressed: () => _openAndRefresh('/learning')),
             IconButton(
                 icon: Icon(Icons.videocam_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: const Color.fromARGB(255, 15, 108, 110), size: 28),
                 onPressed: () => _openAndRefresh('/practice')),
             IconButton(
                 icon: Icon(Icons.person_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: const Color.fromARGB(255, 15, 108, 110), size: 28),
                 onPressed: () => _openAndRefresh('/profile')),
           ],
         ),
@@ -438,7 +438,7 @@ class _DailyChallengeCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onStartChallenge,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 250, 150, 11),
+                backgroundColor: const Color.fromARGB(255, 15, 108, 110),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
@@ -492,7 +492,7 @@ class _QuickActionsSection extends StatelessWidget {
                 child: _SimpleActionCard(
                     icon: Icons.videocam_rounded,
                     label: 'Practice',
-                    color: AppConstants.primaryColor,
+                    color: AppConstants.successColor,
                     route: '/practice',
                     onOpenRoute: onOpenRoute)),
           ],
@@ -512,7 +512,7 @@ class _QuickActionsSection extends StatelessWidget {
                 child: _SimpleActionCard(
                     icon: Icons.bar_chart_rounded,
                     label: 'Progress',
-                    color: AppConstants.successColor,
+                    color: AppConstants.secondaryColor,
                     route: '/profile',
                     onOpenRoute: onOpenRoute)),
           ],
