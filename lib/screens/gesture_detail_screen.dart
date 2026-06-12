@@ -517,33 +517,39 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
               child: OutlinedButton(
                 onPressed: _isProgressReady ? _markAsLearned : null,
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   side: BorderSide(color: AppConstants.primaryColor),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: Text(
                   '✓ Mark as Learned',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: AppConstants.fontSizeNormal,
+                    fontSize: AppConstants.fontSizeMedium,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             Expanded(
               child: ElevatedButton(
                 onPressed: _startPractice,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppConstants.primaryColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: Text(
                   '🎥 Practice This Sign',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: AppConstants.fontSizeNormal,
+                    fontSize: AppConstants.fontSizeMedium,
                   ),
                 ),
               ),

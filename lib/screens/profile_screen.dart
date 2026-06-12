@@ -19,6 +19,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _progressService = ProgressService();
+
   final _userService = UserService();
   Map<String, dynamic> _stats = {};
   late UserProfile _user;
@@ -31,6 +32,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color get _shadowColor {
     final alpha = Theme.of(context).brightness == Brightness.dark ? 0.30 : 0.05;
     return Colors.black.withValues(alpha: alpha);
+  }
+
+  // NOTE: kept for future refactors; currently not used.
+  Widget _sectionCard({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.paddingLarge),
+      decoration: BoxDecoration(
+        color: _surfaceColor,
+        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+        boxShadow: [
+          BoxShadow(
+            color: _shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  TextStyle _titleStyle() {
+    return TextStyle(
+      fontSize: AppConstants.fontSizeLarge,
+      fontWeight: FontWeight.bold,
+      color: _primaryTextColor,
+    );
+  }
+
+  TextStyle _labelStyle({double? size}) {
+    return TextStyle(
+      fontSize: size ?? AppConstants.fontSizeSmall,
+      color: _secondaryTextColor,
+    );
   }
 
   String get _avatarInitials {
@@ -63,6 +98,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadStats() async {
+    // Practice time is stored in SharedPreferences; ensure progress service is ready.
+    await _progressService.init();
     setState(() {
       _user = _userService.getUserProfile();
       _stats = _progressService.getStats();
@@ -238,14 +275,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     value: _user.progressToNextLevel,
                     minHeight: 6,
                     backgroundColor: AppConstants.dividerColor,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppConstants.accentColor,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.green,
                     ),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${_user.xp}/${_user.xpForNextLevel} XP',
+                  '${(_user.progressToNextLevel * 100).round()}% to next level',
                   style: TextStyle(
                     fontSize: 12,
                     color: _secondaryTextColor,
