@@ -165,15 +165,15 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             IconButton(
                 icon: Icon(Icons.school_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: const Color.fromARGB(255, 15, 118, 110), size: 28),
                 onPressed: () => _openAndRefresh('/learning')),
             IconButton(
                 icon: Icon(Icons.videocam_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: const Color.fromARGB(255, 15, 118, 110), size: 28),
                 onPressed: () => _openAndRefresh('/practice')),
             IconButton(
                 icon: Icon(Icons.person_rounded,
-                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
+                    color: const Color.fromARGB(255, 15, 118, 110), size: 28),
                 onPressed: () => _openAndRefresh('/profile')),
           ],
         ),
@@ -304,7 +304,7 @@ class _DailyChallengeCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.emoji_events_rounded,
-                color: Colors.white,
+                color: const Color.fromARGB(255, 226, 198, 70),
                 size: AppConstants.iconSizeLarge,
               ),
               const SizedBox(width: 12),
@@ -359,7 +359,7 @@ class _DailyChallengeCard extends StatelessWidget {
                 elevation: 0,
               ),
               child: Text('Continue',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppConstants.warningColor,)),
             ),
           ),
         ],
