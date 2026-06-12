@@ -165,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             IconButton(
                 icon: Icon(Icons.school_rounded,
-                    color: AppConstants.primaryColor, size: 28),
+                    color: const Color.fromARGB(255, 11, 69, 230), size: 28),
                 onPressed: () => _openAndRefresh('/learning')),
             IconButton(
                 icon: Icon(Icons.videocam_rounded,
@@ -351,7 +351,7 @@ class _DailyChallengeCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onStartChallenge,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 250, 150, 11),
+                backgroundColor: const Color.fromARGB(255, 255, 254, 253),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
